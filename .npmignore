@@ -1,0 +1,8 @@
+src
+.storybook
+.github
+*.config.ts
+*.stories.tsx
+*.test.tsx
+coverage
+storybook-static
