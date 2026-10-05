@@ -89,6 +89,30 @@ const brand: ThemeOverrides = (mode) => ({
 
 `overrides` is either a MUI `ThemeOptions` object or a function of the mode. A palette colour you pass (`primary`, `secondary`, `success`, `warning`, `error`, `info`) replaces the default one, so MUI derives `light`, `dark` and `contrastText` from your `main`. The same argument works without the provider: `createAppTheme('dark', brand)`.
 
+### Light, dark and system mode
+
+`ThemeModeProvider` is uncontrolled by default. `defaultMode` accepts `'light'`, `'dark'` or `'system'`; `'system'` follows the OS `prefers-color-scheme` setting and updates live when it changes. Pass `storageKey` to remember the user's choice in `localStorage`:
+
+```tsx
+<ThemeModeProvider defaultMode="system" storageKey="my-app:theme-mode">
+  <YourApp />
+</ThemeModeProvider>
+```
+
+To own the state yourself (a user setting saved on the server, a cookie), make it controlled. The provider then only reports changes through `onModeChange` and ignores `storageKey`:
+
+```tsx
+const [mode, setMode] = useState<ThemeModePreference>('system');
+
+<ThemeModeProvider mode={mode} onModeChange={setMode}>
+  <YourApp />
+</ThemeModeProvider>;
+```
+
+Inside, `useThemeMode()` returns `mode` (what is rendered, never `'system'`), `preference` (the choice, possibly `'system'`), `systemMode`, `setMode` and `toggle`. `toggle` flips the rendered mode and leaves `'system'`.
+
+The stored choice and the OS setting are only read in the browser. Server HTML renders `defaultMode` (`'system'` renders light), and the saved or OS mode is applied straight after hydration, so there is no hydration mismatch.
+
 ## Components
 
 | Component | What it does | Notes |
@@ -97,7 +121,7 @@ const brand: ThemeOverrides = (mode) => ({
 | `EmptyState` | Empty-list placeholder with tinted icon tile + optional CTA | Link is injectable — works with Next, react-router, or `<a>` |
 | `FloatingCreateButton` | Mobile-only "create" FAB | Hides at the configured breakpoint; link is injectable |
 | `TableSkeleton` | Loading placeholder for tables | Zero coupling, pure MUI |
-| `ThemeModeProvider` | MUI theme + light/dark toggle | Warm editorial teal design language |
+| `ThemeModeProvider` | MUI theme + light/dark/system mode | Controlled or uncontrolled; opt-in `localStorage` persistence |
 | `useDebouncedValue` | Debounce any value | — |
 
 ## Design principles
