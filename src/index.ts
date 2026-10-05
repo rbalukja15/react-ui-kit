@@ -8,6 +8,11 @@ export * from './components/TableSkeleton';
 export { createAppTheme } from './theme/theme';
 export type { ThemeMode, ThemeOverrides } from './theme/theme';
 export { ThemeModeProvider, useThemeMode } from './theme/ThemeModeContext';
+export type {
+  ThemeModeContextValue,
+  ThemeModePreference,
+  ThemeModeProviderProps,
+} from './theme/ThemeModeContext';
 
 // Hooks
 export { useDebouncedValue } from './hooks/useDebouncedValue';
