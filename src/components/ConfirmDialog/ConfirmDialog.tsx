@@ -39,13 +39,24 @@ export function ConfirmDialogProvider({
   const [open, setOpen] = React.useState(false);
   const [opts, setOpts] = React.useState<ConfirmOptions>({});
   const resolverRef = React.useRef<Resolver | null>(null);
+  const titleId = React.useId();
+  const messageId = React.useId();
 
   const confirm = React.useCallback((options: ConfirmOptions) => {
+    // Only one dialog shows at a time: a newer request supersedes a
+    // pending one, which resolves as cancelled rather than hanging.
+    resolverRef.current?.(false);
     setOpts(options);
     setOpen(true);
     return new Promise<boolean>((resolve) => {
       resolverRef.current = resolve;
     });
+  }, []);
+
+  // Don't leave callers awaiting forever if the provider unmounts mid-prompt.
+  React.useEffect(() => () => {
+    resolverRef.current?.(false);
+    resolverRef.current = null;
   }, []);
 
   const settle = React.useCallback((result: boolean) => {
@@ -57,11 +68,18 @@ export function ConfirmDialogProvider({
   return (
     <ConfirmContext.Provider value={confirm}>
       {children}
-      <Dialog open={open} onClose={() => settle(false)} aria-labelledby="confirm-title">
-        {opts.title && <DialogTitle id="confirm-title">{opts.title}</DialogTitle>}
+      <Dialog
+        open={open}
+        onClose={() => settle(false)}
+        // Name the dialog by its title, or by its message when there is no
+        // title, so screen readers never announce an unlabelled dialog.
+        aria-labelledby={opts.title ? titleId : opts.message ? messageId : undefined}
+        aria-describedby={opts.title && opts.message ? messageId : undefined}
+      >
+        {opts.title && <DialogTitle id={titleId}>{opts.title}</DialogTitle>}
         {opts.message && (
           <DialogContent>
-            <DialogContentText>{opts.message}</DialogContentText>
+            <DialogContentText id={messageId}>{opts.message}</DialogContentText>
           </DialogContent>
         )}
         <DialogActions>
