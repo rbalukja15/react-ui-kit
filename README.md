@@ -20,7 +20,7 @@ npm install @rbalukja15/ui-components
 npm install @mui/material @emotion/react @emotion/styled react react-dom
 ```
 
-Or install directly from this repo (no npm publish needed):
+To try unreleased changes, install straight from `main` (the `prepare` script builds it on install):
 
 ```bash
 npm install git+https://github.com/rbalukja15/react-ui-kit.git#main
@@ -141,6 +141,14 @@ npm run build         # tsup -> ESM + CJS + .d.ts
 ```
 
 CI (lint, typecheck, test, build) runs on every push, plus a compatibility matrix that typechecks and tests against each supported MUI major; Storybook deploys to GitHub Pages from `main`.
+
+### Releasing
+
+Versions and the [changelog](./CHANGELOG.md) are managed with [Changesets](https://github.com/changesets/changesets).
+
+1. In a PR with a user-facing change, run `npx changeset`, pick the bump (patch / minor / major) and describe the change. Commit the generated file in `.changeset/`.
+2. When that PR lands on `main`, the Release workflow opens a "chore: release" PR that bumps the version and updates `CHANGELOG.md`.
+3. Merging the release PR publishes the new version to npm (with provenance) using the `NPM_TOKEN` repository secret.
 
 ## Porting guide (remaining components from the source app)
 
