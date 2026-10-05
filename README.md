@@ -1,6 +1,6 @@
 # @rbalukja15/ui-components
 
-A small, deliberately-scoped React component library built on **MUI 5**. Accessible, fully typed, themeable, and decoupled from any single app — every component takes data and callbacks via props rather than reaching into a router, store, or API client.
+A small, deliberately-scoped React component library built on **MUI** (v5, v6, v7 and v9, on React 18 or 19). Accessible, fully typed, themeable, and decoupled from any single app — every component takes data and callbacks via props rather than reaching into a router, store, or API client.
 
 > Extracted and generalised from the frontend of a production veterinary-practice app (Next.js 14, MUI 5, React Query, React Hook Form). The goal here is a clean, reusable subset — not a kitchen sink.
 
@@ -40,6 +40,10 @@ The theme references **Newsreader** for headings and **Inter** for body. Consume
 ```
 
 For plain Vite / CRA / static sites, drop the same `<link>` tags in `index.html`.
+
+### Next.js App Router
+
+The bundle ships with a top-level `'use client'` directive, so components and providers can be imported straight into server components such as `app/layout.tsx`.
 
 ## Quick start
 
@@ -89,7 +93,7 @@ npm run test          # vitest
 npm run build         # tsup -> ESM + CJS + .d.ts
 ```
 
-CI (lint, typecheck, test, build) runs on every push; Storybook deploys to GitHub Pages from `main`.
+CI (lint, typecheck, test, build) runs on every push, plus a compatibility matrix that typechecks and tests against each supported MUI major; Storybook deploys to GitHub Pages from `main`.
 
 ## Porting guide (remaining components from the source app)
 

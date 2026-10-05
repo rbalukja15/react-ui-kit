@@ -68,7 +68,7 @@ export function EmptyState({
           {icon}
         </Box>
       )}
-      <Typography variant="h6" color="text.secondary" fontWeight={500}>
+      <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 500 }}>
         {title}
       </Typography>
       {description && (
