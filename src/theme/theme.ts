@@ -1,7 +1,14 @@
-import { createTheme, type Theme, alpha } from '@mui/material/styles';
+import { createTheme, type Theme, type ThemeOptions, alpha } from '@mui/material/styles';
 import type { PaletteMode } from '@mui/material';
 
 export type ThemeMode = 'light' | 'dark';
+
+/**
+ * Brand overrides layered on top of the library theme. Pass a plain
+ * ``ThemeOptions`` object, or a function of the mode when light and dark
+ * need different values (e.g. a muted primary in dark mode).
+ */
+export type ThemeOverrides = ThemeOptions | ((mode: ThemeMode) => ThemeOptions);
 
 // Display/serif face — editorial serif headings. Consumers load
 // Newsreader themselves (see README "Fonts"). Falls back to a system
@@ -159,9 +166,16 @@ const sharedComponents = (mode: PaletteMode) => ({
       },
     },
   },
+  // Follow the palette so the drawer matches the current mode and any
+  // brand overrides. ``backgroundImage: none`` drops MUI's dark-mode
+  // elevation overlay, which would otherwise lighten the paper.
   MuiDrawer: {
     styleOverrides: {
-      paper: { backgroundColor: '#292723', color: '#EDE8DC' },
+      paper: ({ theme }: { theme: Theme }) => ({
+        backgroundColor: theme.palette.background.paper,
+        backgroundImage: 'none',
+        color: theme.palette.text.primary,
+      }),
     },
   },
   // Hide browser-default spinner buttons on number inputs (they overlap
@@ -256,11 +270,47 @@ const sharedComponents = (mode: PaletteMode) => ({
   },
 });
 
+// Palette entries MUI derives ``light`` / ``dark`` / ``contrastText``
+// from. An override for one of these replaces the base colour instead of
+// merging into it, so ``{ primary: { main: '#7c3aed' } }`` doesn't keep
+// the teal ``light`` and ``dark`` shades.
+const paletteColorKeys = ['primary', 'secondary', 'success', 'warning', 'error', 'info'] as const;
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
+}
+
+function deepMerge<T>(base: T, override: unknown): T {
+  if (!isPlainObject(base) || !isPlainObject(override)) {
+    return (override === undefined ? base : override) as T;
+  }
+  const out: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(override)) {
+    out[key] = deepMerge(out[key], value);
+  }
+  return out as T;
+}
+
+function mergeOptions(base: ThemeOptions, overrides: ThemeOptions): ThemeOptions {
+  const merged = deepMerge(base, overrides);
+  if (merged.palette && overrides.palette) {
+    for (const key of paletteColorKeys) {
+      const color = overrides.palette[key];
+      if (color !== undefined) merged.palette[key] = color;
+    }
+  }
+  return merged;
+}
+
 /** Theme factory. Pair with `ThemeModeProvider` for an integrated
- *  light/dark toggle, or pass directly to MUI's `ThemeProvider`. */
-export function createAppTheme(mode: ThemeMode = 'light'): Theme {
+ *  light/dark toggle, or pass directly to MUI's `ThemeProvider`.
+ *
+ *  `overrides` is deep-merged over the library defaults, so a project
+ *  can rebrand the palette, typography or component styles without
+ *  forking the theme. */
+export function createAppTheme(mode: ThemeMode = 'light', overrides?: ThemeOverrides): Theme {
   const isLight = mode === 'light';
-  return createTheme({
+  const base: ThemeOptions = {
     palette: {
       mode,
       primary: isLight
@@ -304,5 +354,7 @@ export function createAppTheme(mode: ThemeMode = 'light'): Theme {
     },
     components: sharedComponents(mode),
     shape: { borderRadius: 8 },
-  });
+  };
+  const resolved = typeof overrides === 'function' ? overrides(mode) : overrides;
+  return createTheme(resolved ? mergeOptions(base, resolved) : base);
 }

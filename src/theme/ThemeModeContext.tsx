@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { ThemeProvider, CssBaseline } from '@mui/material';
-import { createAppTheme, type ThemeMode } from './theme';
+import { createAppTheme, type ThemeMode, type ThemeOverrides } from './theme';
 
 interface ThemeModeContextValue {
   mode: ThemeMode;
@@ -18,20 +18,24 @@ export function useThemeMode(): ThemeModeContextValue {
   return ctx;
 }
 
-/** Provides the MUI theme + a light/dark toggle. Optionally controlled. */
+/** Provides the MUI theme + a light/dark toggle. Optionally controlled.
+ *  `overrides` is forwarded to `createAppTheme`; define it outside the
+ *  component (or memoize it) so the theme isn't rebuilt every render. */
 export function ThemeModeProvider({
   children,
   defaultMode = 'light',
+  overrides,
 }: {
   children: React.ReactNode;
   defaultMode?: ThemeMode;
+  overrides?: ThemeOverrides;
 }) {
   const [mode, setMode] = React.useState<ThemeMode>(defaultMode);
   const value = React.useMemo<ThemeModeContextValue>(
     () => ({ mode, setMode, toggle: () => setMode((m) => (m === 'light' ? 'dark' : 'light')) }),
     [mode],
   );
-  const theme = React.useMemo(() => createAppTheme(mode), [mode]);
+  const theme = React.useMemo(() => createAppTheme(mode, overrides), [mode, overrides]);
 
   return (
     <ThemeModeContext.Provider value={value}>
