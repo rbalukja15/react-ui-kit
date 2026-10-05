@@ -30,7 +30,11 @@ export function TableSkeleton({
         <TableHead>
           <TableRow>
             {headers.map((label, i) => (
-              <TableCell key={i}>{label || <Skeleton width="60%" />}</TableCell>
+              // A placeholder header has no text, and an empty <th> is an a11y
+              // violation, so unlabelled cells render as <td>.
+              <TableCell key={i} component={label ? 'th' : 'td'}>
+                {label || <Skeleton width="60%" />}
+              </TableCell>
             ))}
           </TableRow>
         </TableHead>

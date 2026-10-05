@@ -28,4 +28,13 @@ describe('<TableSkeleton>', () => {
     render(<TableSkeleton label="Wird geladen" />);
     expect(screen.getByRole('table', { name: 'Wird geladen' })).toBeInTheDocument();
   });
+
+  it('only renders header cells for labelled columns', () => {
+    const { container, rerender } = render(<TableSkeleton columns={3} />);
+    expect(container.querySelectorAll('thead th').length).toBe(0);
+    expect(container.querySelectorAll('thead td').length).toBe(3);
+
+    rerender(<TableSkeleton columns={['Name', 'Email']} />);
+    expect(screen.getAllByRole('columnheader').map((th) => th.textContent)).toEqual(['Name', 'Email']);
+  });
 });
