@@ -19,6 +19,36 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build
+      - name: Check the bundle keeps its 'use client' directive
+        run: head -n 1 dist/index.js | grep -q "use client" && head -n 1 dist/index.cjs | grep -q "use client"
+
+  # Typecheck and test against every supported MUI major, so widening the
+  # peer range is backed by CI rather than by hope.
+  compat:
+    name: compat (MUI ${{ matrix.mui }}, React ${{ matrix.react }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { mui: 5, react: 18 }
+          - { mui: 6, react: 18 }
+          - { mui: 7, react: 19 }
+          - { mui: 9, react: 19 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: >
+          npm install --no-save --ignore-scripts
+          @mui/material@${{ matrix.mui }} @mui/icons-material@${{ matrix.mui }}
+          react@${{ matrix.react }} react-dom@${{ matrix.react }}
+          @types/react@${{ matrix.react }} @types/react-dom@${{ matrix.react }}
+      - run: npm run typecheck
+      - run: npm run test
 
   # Deploys Storybook to GitHub Pages on push to main.
   # Enable Pages in repo Settings > Pages > Source: GitHub Actions.
