@@ -1,5 +1,9 @@
 # @rbalukja15/ui-components
 
+[![npm](https://img.shields.io/npm/v/@rbalukja15/ui-components)](https://www.npmjs.com/package/@rbalukja15/ui-components)
+[![CI](https://github.com/rbalukja15/react-ui-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/rbalukja15/react-ui-kit/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/@rbalukja15/ui-components)](./LICENSE)
+
 A small, deliberately-scoped React component library built on **MUI** (v5, v6, v7 and v9, on React 18 or 19). Accessible, fully typed, themeable, and decoupled from any single app — every component takes data and callbacks via props rather than reaching into a router, store, or API client.
 
 > Extracted and generalised from the frontend of a production veterinary-practice app (Next.js 14, MUI 5, React Query, React Hook Form). The goal here is a clean, reusable subset — not a kitchen sink.
@@ -20,7 +24,7 @@ npm install @rbalukja15/ui-components
 npm install @mui/material @emotion/react @emotion/styled react react-dom
 ```
 
-Or install directly from this repo (no npm publish needed):
+To try unreleased changes, install straight from `main` (the `prepare` script builds it on install):
 
 ```bash
 npm install git+https://github.com/rbalukja15/react-ui-kit.git#main
@@ -141,6 +145,14 @@ npm run build         # tsup -> ESM + CJS + .d.ts
 ```
 
 CI (lint, typecheck, test, build) runs on every push, plus a compatibility matrix that typechecks and tests against each supported MUI major; Storybook deploys to GitHub Pages from `main`.
+
+### Releasing
+
+Versions and the [changelog](./CHANGELOG.md) are managed with [Changesets](https://github.com/changesets/changesets).
+
+1. In a PR with a user-facing change, run `npx changeset`, pick the bump (patch / minor / major) and describe the change. Commit the generated file in `.changeset/`.
+2. When that PR lands on `main`, the Release workflow opens a "chore: release" PR that bumps the version and updates `CHANGELOG.md`.
+3. Merging the release PR publishes the new version to npm with provenance. Publishing uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers), so no npm token is stored in the repo.
 
 ## Porting guide (remaining components from the source app)
 
