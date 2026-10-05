@@ -45,4 +45,9 @@ describe('<EmptyState>', () => {
     const link = screen.getByRole('link', { name: /add/i });
     expect(link).toHaveAttribute('href', '/new');
   });
+
+  it('is not a live region, so it is not announced on mount', () => {
+    render(<EmptyState title="No items" />);
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
 });

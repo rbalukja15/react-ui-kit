@@ -28,3 +28,13 @@ export const HideAtLg: StoryObj<typeof FloatingCreateButton> = {
     hideAtBreakpoint: 'lg',
   },
 };
+
+/** Lifts the FAB above a 56px bottom navigation bar. */
+export const AboveBottomNav: StoryObj<typeof FloatingCreateButton> = {
+  args: {
+    label: 'Add new',
+    icon: <AddIcon />,
+    onClick: () => alert('clicked'),
+    bottomOffset: 'calc(56px + 20px)',
+  },
+};
