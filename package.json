@@ -4,6 +4,22 @@
   "description": "A small, well-typed React component library built on MUI — accessible, themeable, and decoupled from any app.",
   "license": "MIT",
   "author": "Romarjo Balukja",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rbalukja15/react-ui-kit.git"
+  },
+  "homepage": "https://rbalukja15.github.io/react-ui-kit",
+  "bugs": {
+    "url": "https://github.com/rbalukja15/react-ui-kit/issues"
+  },
+  "keywords": [
+    "react",
+    "mui",
+    "material-ui",
+    "components",
+    "ui-kit",
+    "design-system"
+  ],
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
@@ -17,8 +33,13 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -28,7 +49,9 @@
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "changeset": "changeset",
+    "release": "changeset publish"
   },
   "peerDependencies": {
     "@emotion/react": "^11",
@@ -38,6 +61,7 @@
     "react-dom": "^18.0.0 || ^19.0.0"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^5.15.10",

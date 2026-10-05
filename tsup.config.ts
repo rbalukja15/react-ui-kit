@@ -17,10 +17,7 @@ export default defineConfig({
     'react',
     'react-dom',
     '@mui/material',
-    '@mui/icons-material',
-    '@mui/x-date-pickers',
     '@emotion/react',
     '@emotion/styled',
-    'react-hook-form',
   ],
 });
