@@ -6,5 +6,5 @@ export default meta;
 
 export const Default: StoryObj<typeof TableSkeleton> = { args: { rows: 5, columns: 4 } };
 export const WithHeaders: StoryObj<typeof TableSkeleton> = {
-  args: { rows: 4, columns: ['Name', 'Owner', 'Status', 'Updated'] },
+  args: { rows: 4, columns: ['Name', 'Email', 'Role', 'Updated'] },
 };
