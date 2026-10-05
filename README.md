@@ -41,6 +41,10 @@ The theme references **Newsreader** for headings and **Inter** for body. Consume
 
 For plain Vite / CRA / static sites, drop the same `<link>` tags in `index.html`.
 
+### Next.js App Router
+
+The bundle ships with a top-level `'use client'` directive, so components and providers can be imported straight into server components such as `app/layout.tsx`.
+
 ## Quick start
 
 ```tsx
