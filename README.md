@@ -148,7 +148,7 @@ Versions and the [changelog](./CHANGELOG.md) are managed with [Changesets](https
 
 1. In a PR with a user-facing change, run `npx changeset`, pick the bump (patch / minor / major) and describe the change. Commit the generated file in `.changeset/`.
 2. When that PR lands on `main`, the Release workflow opens a "chore: release" PR that bumps the version and updates `CHANGELOG.md`.
-3. Merging the release PR publishes the new version to npm (with provenance) using the `NPM_TOKEN` repository secret.
+3. Merging the release PR publishes the new version to npm with provenance. Publishing uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers), so no npm token is stored in the repo.
 
 ## Porting guide (remaining components from the source app)
 
