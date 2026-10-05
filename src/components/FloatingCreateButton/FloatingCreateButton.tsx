@@ -14,6 +14,15 @@ export interface FloatingCreateButtonProps {
   onClick?: () => void;
   /** Hide the FAB at this breakpoint and wider. Defaults to `'md'`. */
   hideAtBreakpoint?: 'sm' | 'md' | 'lg' | 'xl';
+  /**
+   * Distance from the bottom of the viewport. Numbers are theme spacing
+   * units, strings are any CSS length. Raise it when the app has a bottom
+   * navigation bar, e.g. `bottomOffset={9.5}` or `'calc(56px + 20px)'`.
+   * Defaults to `2` (16px with the default spacing).
+   */
+  bottomOffset?: number | string;
+  /** Distance from the right edge of the viewport, same units as `bottomOffset`. Defaults to `2`. */
+  rightOffset?: number | string;
 }
 
 /**
@@ -28,6 +37,8 @@ export function FloatingCreateButton({
   LinkComponent,
   onClick,
   hideAtBreakpoint = 'md',
+  bottomOffset = 2,
+  rightOffset = 2,
 }: FloatingCreateButtonProps) {
   const linkProps =
     href && LinkComponent ? { component: LinkComponent, href } : href ? { href } : {};
@@ -39,8 +50,8 @@ export function FloatingCreateButton({
       onClick={onClick}
       sx={{
         position: 'fixed',
-        right: 16,
-        bottom: 76,
+        right: (theme) => (typeof rightOffset === 'number' ? theme.spacing(rightOffset) : rightOffset),
+        bottom: (theme) => (typeof bottomOffset === 'number' ? theme.spacing(bottomOffset) : bottomOffset),
         display: { xs: 'flex', [hideAtBreakpoint]: 'none' },
         borderRadius: 4,
       }}

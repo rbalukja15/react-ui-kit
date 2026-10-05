@@ -24,6 +24,9 @@ export interface EmptyStateProps {
  * Empty-state surface for list/table views with no data. A tinted teal
  * icon tile + serif title + optional description and CTA. The CTA is
  * link-or-handler — provide one or the other.
+ *
+ * It is deliberately not a live region: it is page content, so screen
+ * readers find it while reading rather than announcing it on mount.
  */
 export function EmptyState({
   title,
@@ -40,7 +43,6 @@ export function EmptyState({
 
   return (
     <Box
-      role="status"
       sx={{
         textAlign: 'center',
         py: 6,

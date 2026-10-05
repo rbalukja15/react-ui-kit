@@ -20,9 +20,8 @@ const ConfirmContext = React.createContext<((opts: ConfirmOptions) => Promise<bo
 
 /**
  * Promise-based confirmation dialog — a drop-in replacement for
- * `window.confirm()`. In vetapp the labels came from i18next; here they
- * are props with sensible English defaults, so the component carries no
- * i18n dependency. Consumers who localise just pass translated strings.
+ * `window.confirm()`. Labels are props with sensible English defaults,
+ * so the component carries no i18n dependency. Consumers who localise just pass translated strings.
  *
  *   const confirm = useConfirm();
  *   if (await confirm({ message: 'Delete this record?', destructive: true })) { ... }

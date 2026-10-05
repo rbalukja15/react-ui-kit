@@ -4,7 +4,7 @@ import { TableSkeleton } from './TableSkeleton';
 describe('<TableSkeleton>', () => {
   it('sets aria-busy so assistive tech knows the table is loading', () => {
     render(<TableSkeleton />);
-    expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('table', { name: 'Loading' })).toHaveAttribute('aria-busy', 'true');
   });
 
   it('renders the requested number of rows and columns', () => {
@@ -22,5 +22,10 @@ describe('<TableSkeleton>', () => {
   it('omits the header row when showHeader is false', () => {
     const { container } = render(<TableSkeleton columns={['Name', 'Email']} showHeader={false} />);
     expect(container.querySelector('thead')).toBeNull();
+  });
+
+  it('uses the label prop as the accessible name', () => {
+    render(<TableSkeleton label="Wird geladen" />);
+    expect(screen.getByRole('table', { name: 'Wird geladen' })).toBeInTheDocument();
   });
 });

@@ -8,18 +8,24 @@ export interface TableSkeletonProps {
   columns?: number | string[];
   /** Render the header row. */
   showHeader?: boolean;
+  /** Accessible name for the loading table. Pass a translated string to localise it. Defaults to `'Loading'`. */
+  label?: string;
 }
 
 /**
  * Loading placeholder for tables. Zero app coupling — pure MUI.
- * Lifted from vetapp as-is.
  */
-export function TableSkeleton({ rows = 5, columns = 4, showHeader = true }: TableSkeletonProps) {
+export function TableSkeleton({
+  rows = 5,
+  columns = 4,
+  showHeader = true,
+  label = 'Loading',
+}: TableSkeletonProps) {
   const headers = Array.isArray(columns) ? columns : Array.from({ length: columns }, () => '');
   const colCount = headers.length;
 
   return (
-    <Table aria-busy="true" aria-label="loading">
+    <Table aria-busy="true" aria-label={label}>
       {showHeader && (
         <TableHead>
           <TableRow>

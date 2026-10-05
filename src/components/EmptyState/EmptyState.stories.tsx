@@ -6,9 +6,9 @@ export default meta;
 
 export const Default: StoryObj<typeof EmptyState> = {
   args: {
-    title: 'No patients yet',
-    description: 'Add your first patient to get started.',
-    actionLabel: 'Add patient',
+    title: 'No projects yet',
+    description: 'Create your first project to get started.',
+    actionLabel: 'New project',
     onAction: () => alert('clicked'),
   },
 };
