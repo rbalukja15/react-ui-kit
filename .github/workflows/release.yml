@@ -15,14 +15,13 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      id-token: write # npm provenance
-    env:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      id-token: write # npm trusted publishing (OIDC) and provenance
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Trusted publishing needs npm 11.5.1+, which ships with Node 24.
+          node-version: 24
           cache: npm
           registry-url: https://registry.npmjs.org
       - run: npm ci
@@ -32,9 +31,8 @@ jobs:
       - uses: changesets/action@v1
         with:
           version: npx changeset version
-          publish: ${{ env.NPM_TOKEN != '' && 'npm run release' || '' }}
+          publish: npm run release
           commit: 'chore: release'
           title: 'chore: release'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
