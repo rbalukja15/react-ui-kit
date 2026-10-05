@@ -6,7 +6,7 @@ export * from './components/TableSkeleton';
 
 // Theme
 export { createAppTheme } from './theme/theme';
-export type { ThemeMode } from './theme/theme';
+export type { ThemeMode, ThemeOverrides } from './theme/theme';
 export { ThemeModeProvider, useThemeMode } from './theme/ThemeModeContext';
 
 // Hooks

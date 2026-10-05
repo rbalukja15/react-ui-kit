@@ -66,6 +66,29 @@ function App() {
 }
 ```
 
+## Theming
+
+The default theme is a warm editorial look on a teal axis. Pass `overrides` to rebrand it per project; they are deep-merged over the defaults, so you only list what changes:
+
+```tsx
+import { ThemeModeProvider, type ThemeOverrides } from '@rbalukja15/ui-components';
+
+// Define outside the component (or memoize) so the theme isn't rebuilt each render.
+const brand: ThemeOverrides = (mode) => ({
+  palette: {
+    primary: { main: mode === 'light' ? '#1d4ed8' : '#93c5fd' },
+    background: mode === 'light' ? { default: '#f8fafc', paper: '#ffffff' } : undefined,
+  },
+  typography: { h1: { fontFamily: '"Poppins", sans-serif' } },
+});
+
+<ThemeModeProvider defaultMode="light" overrides={brand}>
+  <YourApp />
+</ThemeModeProvider>;
+```
+
+`overrides` is either a MUI `ThemeOptions` object or a function of the mode. A palette colour you pass (`primary`, `secondary`, `success`, `warning`, `error`, `info`) replaces the default one, so MUI derives `light`, `dark` and `contrastText` from your `main`. The same argument works without the provider: `createAppTheme('dark', brand)`.
+
 ## Components
 
 | Component | What it does | Notes |
