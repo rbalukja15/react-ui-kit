@@ -126,10 +126,11 @@ export function Sidebar({
         variant="temporary"
         open={mobileOpen}
         onClose={onMobileClose}
-        // Newer MUI gives the overlay's paper role="dialog", which needs a
-        // name. Older majors type `slotProps` without `paper` and pass the
-        // key on to the Modal, which ignores it; their paper has no role.
-        {...({ slotProps: { paper: { 'aria-label': label } } } as object)}
+        // The overlay is a modal, so its paper is a named dialog. MUI 9 sets
+        // the role itself; MUI 6 and 7 take `slotProps.paper` without one.
+        // MUI 5 types `slotProps` without `paper` and passes the key on to
+        // the Modal, which ignores it.
+        {...({ slotProps: { paper: { role: 'dialog', 'aria-modal': true, 'aria-label': label } } } as object)}
         sx={{
           display: { xs: 'block', [breakpoint]: 'none' },
           '& .MuiDrawer-paper': { width, boxSizing: 'border-box' },
