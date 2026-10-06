@@ -121,10 +121,14 @@ The stored choice and the OS setting are only read in the browser. Server HTML r
 
 | Component | What it does | Notes |
 | --- | --- | --- |
+| `Breadcrumbs` | Breadcrumb trail for detail-page headers | Link is injectable; last crumb gets `aria-current="page"` |
 | `ConfirmDialog` | Promise-based `confirm()` replacement via context + `useConfirm()` hook | Labels are props (no i18n dependency) |
 | `EmptyState` | Empty-list placeholder with tinted icon tile + optional CTA | Link is injectable — works with Next, react-router, or `<a>` |
 | `FloatingCreateButton` | Mobile-only "create" FAB | Hides at the configured breakpoint; link is injectable |
+| `PageSkeleton` | Whole-page loading placeholder (`list`, `profile` or `document` layout) | Announces one "Loading" status; label is a prop |
+| `RowActions` | Keeps a table row's action buttons on one line | Wrap the buttons in the action cell |
 | `TableSkeleton` | Loading placeholder for tables | Zero coupling, pure MUI |
+| `TruncatedText` | One-line text with an ellipsis | Tooltip with the full text only when it is cut off |
 | `ThemeModeProvider` | MUI theme + light/dark/system mode | Controlled or uncontrolled; opt-in `localStorage` persistence |
 | `useDebouncedValue` | Debounce any value | — |
 
