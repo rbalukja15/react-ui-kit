@@ -126,11 +126,13 @@ The stored choice and the OS setting are only read in the browser. Server HTML r
 | `Breadcrumbs` | Breadcrumb trail for detail-page headers | Link is injectable; last crumb gets `aria-current="page"` |
 | `ConfirmDialog` | Promise-based `confirm()` replacement via context + `useConfirm()` hook | Labels are props (no i18n dependency) |
 | `DatePickerField` | Date input with a popover calendar; the value is an ISO `YYYY-MM-DD` string | From `/date-picker` (needs `@mui/x-date-pickers` and `dayjs`); RHF adapter from `/date-picker/rhf`. See [Forms](#forms) |
+| `DatePresets` | Quick-pick chips such as "+1 month / +3 months / +1 year" next to a date field | Counts from a base date read at click time, or today; returns an ISO `YYYY-MM-DD` string. No date library needed |
 | `EmptyState` | Empty-list placeholder with tinted icon tile + optional CTA | Link is injectable — works with Next, react-router, or `<a>` |
 | `FloatingCreateButton` | Mobile-only "create" FAB | Hides at the configured breakpoint; link is injectable |
 | `IdAutocomplete` | Single-select picker over `{ id, label }` options whose value is the chosen id | Optional server search, group headers and an "Add …" row; RHF adapter from `/rhf` |
 | `PageSkeleton` | Whole-page loading placeholder (`list`, `profile` or `document` layout) | Announces one "Loading" status; label is a prop |
 | `RowActions` | Keeps a table row's action buttons on one line | Wrap the buttons in the action cell |
+| `StatusChip` | Status chip that opens a menu of the statuses it may move to next | Labels and colors per status are props; read-only without `onChange`. Optional extra actions above the statuses |
 | `TableSkeleton` | Loading placeholder for tables | Zero coupling, pure MUI |
 | `TitleCaseField` | Text field that title-cases a name-like value on blur | The rule is exported as `titleCase`; RHF adapter from `/rhf` |
 | `TruncatedText` | One-line text with an ellipsis | Tooltip with the full text only when it is cut off |
