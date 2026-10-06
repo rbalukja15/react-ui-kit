@@ -36,9 +36,9 @@ function TokensShowcase() {
         <Stack direction="row" spacing={2} flexWrap="wrap" rowGap={2}>
           <Swatch label="primary" color="#0f766e" />
           <Swatch label="primary.light" color="#5eead4" />
-          <Swatch label="secondary" color="#0891b2" />
+          <Swatch label="secondary" color="#0a7c97" />
           <Swatch label="success" color="#5F7544" />
-          <Swatch label="warning" color="#B0792E" />
+          <Swatch label="warning" color="#9A6824" />
           <Swatch label="error" color="#B23A3A" />
           <Swatch label="info" color="#4A6E8C" />
         </Stack>

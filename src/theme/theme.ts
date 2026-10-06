@@ -315,15 +315,15 @@ export function createAppTheme(mode: ThemeMode = 'light', overrides?: ThemeOverr
       mode,
       primary: isLight
         ? { main: '#0f766e', light: '#5eead4', dark: '#115e59', contrastText: '#ffffff' }
-        : { main: '#2E9488', light: '#84B7AE', dark: '#3F8C82', contrastText: '#F4F7F5' },
+        : { main: '#2E9488', light: '#84B7AE', dark: '#3F8C82', contrastText: '#06201C' },
       secondary: isLight
-        ? { main: '#0891b2', light: '#67e8f9', dark: '#0e7490', contrastText: '#ffffff' }
+        ? { main: '#0a7c97', light: '#67e8f9', dark: '#155e75', contrastText: '#ffffff' }
         : { main: '#3FA4BE', light: '#9BD8E6', dark: '#2C7E94', contrastText: '#08222A' },
       success: isLight
         ? { main: '#5F7544', light: '#8BA862', dark: '#516237', contrastText: '#ffffff' }
         : { main: '#A8C089', light: '#C2D6A8', dark: '#7C9658', contrastText: '#14210A' },
       warning: isLight
-        ? { main: '#B0792E', light: '#D8A24A', dark: '#8A5E1E', contrastText: '#ffffff' }
+        ? { main: '#9A6824', light: '#D8A24A', dark: '#8A5E1E', contrastText: '#ffffff' }
         : { main: '#E0B468', light: '#EECB92', dark: '#B0892E', contrastText: '#241803' },
       error: isLight
         ? { main: '#B23A3A', light: '#D87A7A', dark: '#A0342E', contrastText: '#ffffff' }

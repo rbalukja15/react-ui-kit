@@ -32,7 +32,7 @@ describe('createAppTheme overrides', () => {
     const t = createAppTheme('light', { palette: { primary: { main: '#7c3aed' } } });
     expect(t.palette.primary.main).toBe('#7c3aed');
     expect(t.palette.primary.dark).not.toBe('#115e59');
-    expect(t.palette.secondary.main).toBe('#0891b2');
+    expect(t.palette.secondary.main).toBe('#0a7c97');
   });
 
   it('deep-merges background and keeps the untouched keys', () => {
