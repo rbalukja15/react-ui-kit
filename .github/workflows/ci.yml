@@ -19,13 +19,112 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build
-      - name: Check the bundle keeps its 'use client' directive
-        run: head -n 1 dist/index.js | grep -q "use client" && head -n 1 dist/index.cjs | grep -q "use client"
+      # Every emitted file, entries and shared chunks, must open with the
+      # directive itself: a later line, or the same line after generated
+      # code, is not a directive and Next.js ignores it.
+      - name: Check every bundle file keeps its 'use client' directive
+        run: |
+          status=0
+          for entry in index rhf date-picker date-picker/rhf; do
+            for ext in js cjs; do
+              [ -f "dist/$entry.$ext" ] || { echo "::error::dist/$entry.$ext was not built"; status=1; }
+            done
+          done
+          for file in $(find dist -type f \( -name '*.js' -o -name '*.cjs' \)); do
+            [ "$(head -n 1 "$file")" = "'use client';" ] || { echo "::error file=$file::does not start with 'use client';"; status=1; }
+          done
+          exit $status
+      # The optional peers belong to the subpath entries only; an app without
+      # them must still be able to import the main entry, and typecheck it.
+      # Follows each entry's relative imports, so shared chunks are checked
+      # too, declaration files included: a declaration imports './x.js' (or
+      # './x.cjs') for the chunk declared in x.d.ts (or x.d.cts).
+      - name: Check the main entry does not import the optional peers
+        run: |
+          node --input-type=module <<'EOF'
+          import { readFileSync } from 'node:fs';
+          import { dirname, join } from 'node:path';
+          const peer = /["'](react-hook-form|@mui\/x-date-pickers|dayjs)(\/[^"']*)?["']/;
+          const local = /(?:from|import|require\(|import\()\s*["'](\.{1,2}\/[^"']+)["']/g;
+          const declaration = /\.d\.c?ts$/;
+          const failures = [];
+          for (const entry of ['dist/index.js', 'dist/index.cjs', 'dist/index.d.ts', 'dist/index.d.cts']) {
+            const queue = [entry];
+            const seen = new Set();
+            while (queue.length > 0) {
+              const file = queue.pop();
+              if (seen.has(file)) continue;
+              seen.add(file);
+              const code = readFileSync(file, 'utf8');
+              const match = code.match(peer);
+              if (match) failures.push(`${file} imports ${match[1]} (reached from ${entry})`);
+              for (const [, spec] of code.matchAll(local)) {
+                const target = join(dirname(file), spec);
+                queue.push(declaration.test(file) ? target.replace(/\.js$/, '.d.ts').replace(/\.cjs$/, '.d.cts') : target);
+              }
+            }
+          }
+          if (failures.length > 0) {
+            for (const failure of failures) console.log(`::error::${failure}`);
+            process.exit(1);
+          }
+          EOF
+      # rhf/ and date-picker/ hold package.json stubs for resolvers that
+      # ignore "exports" (Jest 27, webpack 4). Each must be published and
+      # point at the files "exports" names for its subpath.
+      - name: Check the subpath stubs match the exports map
+        run: |
+          node --input-type=module <<'EOF'
+          import { existsSync, readFileSync } from 'node:fs';
+          import { dirname, join } from 'node:path';
+          const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+          const failures = [];
+          for (const [subpath, target] of Object.entries(pkg.exports)) {
+            if (subpath === '.' || subpath === './package.json') continue;
+            const stub = join(subpath, 'package.json');
+            if (!pkg.files.includes(subpath.split('/')[1])) failures.push(`${subpath} is not in "files"`);
+            if (!existsSync(stub)) {
+              failures.push(`${stub} is missing`);
+              continue;
+            }
+            const fields = JSON.parse(readFileSync(stub, 'utf8'));
+            const expected = { main: target.require.default, module: target.import.default, types: target.import.types };
+            for (const [field, file] of Object.entries(expected)) {
+              const actual = fields[field] === undefined ? undefined : join(dirname(stub), fields[field]);
+              if (actual !== join(file)) failures.push(`${stub}: ${field} is ${fields[field]}, not the path to ${file}`);
+              else if (!existsSync(actual)) failures.push(`${stub}: ${field} points at ${actual}, which was not built`);
+            }
+          }
+          if (failures.length > 0) {
+            for (const failure of failures) console.log(`::error::${failure}`);
+            process.exit(1);
+          }
+          EOF
+      # Peers stay external, so no source map may list a file from
+      # node_modules: one that does means a dependency was bundled.
+      - name: Check no dependency code is bundled
+        run: |
+          node --input-type=module <<'EOF'
+          import { readdirSync, readFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          const maps = readdirSync('dist', { recursive: true }).filter((file) => file.endsWith('.map'));
+          const bundled = maps.flatMap((map) => {
+            const { sources } = JSON.parse(readFileSync(join('dist', map), 'utf8'));
+            return sources.filter((source) => source.includes('node_modules')).map((source) => `${map}: ${source}`);
+          });
+          if (bundled.length > 0) {
+            for (const line of bundled) console.log(`::error::${line}`);
+            process.exit(1);
+          }
+          EOF
 
-  # Typecheck and test against every supported MUI major, so widening the
-  # peer range is backed by CI rather than by hope.
-  compat:
-    name: compat (MUI ${{ matrix.mui }}, React ${{ matrix.react }})
+  # Installs the packed library into a fresh app on each supported MUI major,
+  # with plain `npm install`. npm checks optional peers as well: a missing
+  # one is resolved to the newest version in its range, whose own peers must
+  # fit the app. That is why @mui/x-date-pickers is not a peer at all, as no
+  # single range fits both MUI 5 and MUI 9.
+  install:
+    name: install (MUI ${{ matrix.mui }}, React ${{ matrix.react }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -41,12 +140,49 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      # `npm pack` runs the `prepare` script, which builds.
+      - run: npm ci --ignore-scripts
+      - run: npm pack --pack-destination "$RUNNER_TEMP"
+      - name: Install the packed library into a fresh app
+        working-directory: ${{ runner.temp }}
+        run: |
+          mkdir app
+          cd app
+          npm init -y
+          npm install react@${{ matrix.react }} react-dom@${{ matrix.react }} @mui/material@${{ matrix.mui }} @emotion/react @emotion/styled
+          npm install ../rbalukja15-ui-components-*.tgz
+
+  # Typecheck and test against every supported MUI major, so widening the
+  # peer range is backed by CI rather than by hope. `x` is the
+  # @mui/x-date-pickers major for that row: v6 needs MUI 5 and React 18,
+  # v7 and v8 cover MUI 5-7, v9 needs MUI 7.3 or later. Every supported x
+  # major appears at least once; verify covers MUI 5 with x 8, the
+  # devDependencies.
+  compat:
+    name: compat (MUI ${{ matrix.mui }}, React ${{ matrix.react }}, pickers ${{ matrix.x }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { mui: 5, react: 18, x: 6 }
+          - { mui: 6, react: 18, x: 7 }
+          - { mui: 7, react: 19, x: 8 }
+          - { mui: 7, react: 19, x: 9 }
+          - { mui: 9, react: 19, x: 9 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
       - run: npm ci --ignore-scripts
       - run: >
           npm install --no-save --ignore-scripts
           @mui/material@${{ matrix.mui }} @mui/icons-material@${{ matrix.mui }}
           react@${{ matrix.react }} react-dom@${{ matrix.react }}
           @types/react@${{ matrix.react }} @types/react-dom@${{ matrix.react }}
+          @mui/x-date-pickers@${{ matrix.x }}
       - run: npm run typecheck
       - run: npm run test
 

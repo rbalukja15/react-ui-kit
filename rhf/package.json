@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "sideEffects": false,
+  "main": "../dist/rhf.cjs",
+  "module": "../dist/rhf.js",
+  "types": "../dist/rhf.d.ts"
+}
