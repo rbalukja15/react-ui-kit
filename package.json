@@ -1,6 +1,6 @@
 {
   "name": "@rbalukja15/ui-components",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A small, well-typed React component library built on MUI — accessible, themeable, and decoupled from any app.",
   "license": "MIT",
   "author": "Romarjo Balukja",
