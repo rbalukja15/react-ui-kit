@@ -27,13 +27,64 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./rhf": {
+      "import": {
+        "types": "./dist/rhf.d.ts",
+        "default": "./dist/rhf.js"
+      },
+      "require": {
+        "types": "./dist/rhf.d.cts",
+        "default": "./dist/rhf.cjs"
+      }
+    },
+    "./date-picker": {
+      "import": {
+        "types": "./dist/date-picker.d.ts",
+        "default": "./dist/date-picker.js"
+      },
+      "require": {
+        "types": "./dist/date-picker.d.cts",
+        "default": "./dist/date-picker.cjs"
+      }
+    },
+    "./date-picker/rhf": {
+      "import": {
+        "types": "./dist/date-picker/rhf.d.ts",
+        "default": "./dist/date-picker/rhf.js"
+      },
+      "require": {
+        "types": "./dist/date-picker/rhf.d.cts",
+        "default": "./dist/date-picker/rhf.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "rhf": [
+        "./dist/rhf.d.ts"
+      ],
+      "date-picker": [
+        "./dist/date-picker.d.ts"
+      ],
+      "date-picker/rhf": [
+        "./dist/date-picker/rhf.d.ts"
+      ]
     }
   },
   "files": [
     "dist",
+    "rhf",
+    "date-picker",
     "CHANGELOG.md"
   ],
   "publishConfig": {
@@ -57,8 +108,18 @@
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "@mui/material": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^9.0.0",
+    "dayjs": "^1.10.7",
     "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "react-hook-form": "^7.31.3"
+  },
+  "peerDependenciesMeta": {
+    "dayjs": {
+      "optional": true
+    },
+    "react-hook-form": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.1",
@@ -66,6 +127,7 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^5.15.10",
     "@mui/material": "^5.18.0",
+    "@mui/x-date-pickers": "^8.29.4",
     "@storybook/react-vite": "^8.6.0",
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^16.0.0",
@@ -75,10 +137,12 @@
     "@typescript-eslint/parser": "^6.21.0",
     "@vitejs/plugin-react": "^4.3.0",
     "@vitest/coverage-v8": "^2.1.0",
+    "dayjs": "^1.11.23",
     "eslint": "^8.57.0",
     "jsdom": "^25.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.89.0",
     "storybook": "^8.6.0",
     "tsup": "^8.3.0",
     "typescript": "5.5",

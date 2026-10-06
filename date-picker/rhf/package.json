@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "sideEffects": false,
+  "main": "../../dist/date-picker/rhf.cjs",
+  "module": "../../dist/date-picker/rhf.js",
+  "types": "../../dist/date-picker/rhf.d.ts"
+}

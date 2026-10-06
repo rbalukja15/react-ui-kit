@@ -24,6 +24,8 @@ npm install @rbalukja15/ui-components
 npm install @mui/material @emotion/react @emotion/styled react react-dom
 ```
 
+The form subpaths also need `react-hook-form`, `@mui/x-date-pickers` or `dayjs`, which you install only if you use them. See [Forms](#forms).
+
 To try unreleased changes, install straight from `main` (the `prepare` script builds it on install):
 
 ```bash
@@ -47,7 +49,7 @@ For plain Vite / CRA / static sites, drop the same `<link>` tags in `index.html`
 
 ### Next.js App Router
 
-The bundle ships with a top-level `'use client'` directive, so components and providers can be imported straight into server components such as `app/layout.tsx`.
+Every entry ships with a top-level `'use client'` directive, so components and providers can be imported straight into server components such as `app/layout.tsx`. The directive also makes the plain functions it exports (`titleCase`, `withPinnedOption`, `createAppTheme`) client functions: call them from client code, not from a server component, route handler or server action, where they fail at runtime.
 
 ## Quick start
 
@@ -123,14 +125,104 @@ The stored choice and the OS setting are only read in the browser. Server HTML r
 | --- | --- | --- |
 | `Breadcrumbs` | Breadcrumb trail for detail-page headers | Link is injectable; last crumb gets `aria-current="page"` |
 | `ConfirmDialog` | Promise-based `confirm()` replacement via context + `useConfirm()` hook | Labels are props (no i18n dependency) |
+| `DatePickerField` | Date input with a popover calendar; the value is an ISO `YYYY-MM-DD` string | From `/date-picker` (needs `@mui/x-date-pickers` and `dayjs`); RHF adapter from `/date-picker/rhf`. See [Forms](#forms) |
 | `EmptyState` | Empty-list placeholder with tinted icon tile + optional CTA | Link is injectable — works with Next, react-router, or `<a>` |
 | `FloatingCreateButton` | Mobile-only "create" FAB | Hides at the configured breakpoint; link is injectable |
+| `IdAutocomplete` | Single-select picker over `{ id, label }` options whose value is the chosen id | Optional server search, group headers and an "Add …" row; RHF adapter from `/rhf` |
 | `PageSkeleton` | Whole-page loading placeholder (`list`, `profile` or `document` layout) | Announces one "Loading" status; label is a prop |
 | `RowActions` | Keeps a table row's action buttons on one line | Wrap the buttons in the action cell |
 | `TableSkeleton` | Loading placeholder for tables | Zero coupling, pure MUI |
+| `TitleCaseField` | Text field that title-cases a name-like value on blur | The rule is exported as `titleCase`; RHF adapter from `/rhf` |
 | `TruncatedText` | One-line text with an ellipsis | Tooltip with the full text only when it is cut off |
 | `ThemeModeProvider` | MUI theme + light/dark/system mode | Controlled or uncontrolled; opt-in `localStorage` persistence |
 | `useDebouncedValue` | Debounce any value | — |
+
+## Forms
+
+`TitleCaseField`, `IdAutocomplete` and `DatePickerField` are controlled first: each works on its own with `value` and `onChange`, and `onChange` receives the new value (a string, an id, an ISO date), not an event. They share `label`, `required`, `disabled`, `helperText`, `errorMessage`, `error`, `size` and `fullWidth`. A non-empty `errorMessage` puts the field in its error state and replaces `helperText`; `error` puts it in the error state without a message, keeping `helperText`. `required` is MUI's own prop: it adds the asterisk and the input's native `required` attribute, so give the `<form>` `noValidate` if you show your own messages instead of the browser's. From `@mui/x-date-pickers` 8 on, `DatePickerField`'s input is a hidden one behind the day, month and year parts, and MUI X marks none of the parts as required, so screen readers are not told the date is required; say so in the label or `helperText` where it matters.
+
+The React Hook Form adapters are thin wrappers. Each takes `name`, `control` and optional `rules`, plus the field's other props, and shows the field's validation message unless you pass `errorMessage`. A failed rule turns the field invalid even when it has no message (`required: true`).
+
+The optional dependencies sit behind subpaths, so an app that does not use them never installs them:
+
+| Import from | Exports | Needs |
+| --- | --- | --- |
+| `@rbalukja15/ui-components` | `TitleCaseField`, `titleCase`, `IdAutocomplete`, `withPinnedOption` | Nothing extra |
+| `@rbalukja15/ui-components/rhf` | `RhfTitleCaseField`, `RhfIdAutocomplete` | `react-hook-form` 7.31.3 or later |
+| `@rbalukja15/ui-components/date-picker` | `DatePickerField` | `@mui/x-date-pickers` 6.2 or later (v6 to v9), `dayjs` |
+| `@rbalukja15/ui-components/date-picker/rhf` | `RhfDatePickerField` | All three |
+
+```bash
+npm install react-hook-form                  # for /rhf
+npm install @mui/x-date-pickers@9 dayjs      # for /date-picker, on MUI 7.3+ or 9
+npm install @mui/x-date-pickers@8 dayjs      # for /date-picker, on MUI 5.15+, 6 or 7
+```
+
+`@mui/x-date-pickers` v6 to v9 all work; pick the one your MUI supports (v6: MUI 5 on React 18; v7 and v8: MUI 5.15 or later, 6 and 7; v9: MUI 7.3 or later and 9). `react-hook-form` and `dayjs` are optional peer dependencies, but `@mui/x-date-pickers` is not declared as a peer at all: npm checks a missing optional peer against the newest version in its range, and MUI X 9's own peers would then block `npm install` in every MUI 5 or 6 app. So npm does not warn about a missing or mismatched MUI X; install one of the majors above yourself.
+
+`DatePickerField` needs no `LocalizationProvider`; when the app has one with the dayjs adapter, the field follows its locale and texts. For month names in another language, import the dayjs locale and pass it: `import 'dayjs/locale/de'` and `adapterLocale="de"`.
+
+Each subpath also has a folder with a `package.json` pointing into `dist/`, so tools that ignore the `exports` map (Jest 27, webpack 4) resolve it too.
+
+Controlled:
+
+```tsx
+import { useState } from 'react';
+import { IdAutocomplete, TitleCaseField } from '@rbalukja15/ui-components';
+import { DatePickerField } from '@rbalukja15/ui-components/date-picker';
+
+const people = [
+  { id: 1, label: 'Ada Lovelace' },
+  { id: 2, label: 'Alan Turing' },
+];
+
+function ProjectFields() {
+  const [name, setName] = useState('');
+  const [ownerId, setOwnerId] = useState<number | null>(null);
+  const [startDate, setStartDate] = useState('');
+
+  return (
+    <>
+      <TitleCaseField label="Project name" value={name} onChange={setName} required />
+      <IdAutocomplete label="Owner" options={people} value={ownerId} onChange={setOwnerId} />
+      <DatePickerField label="Start date" value={startDate} onChange={setStartDate} />
+    </>
+  );
+}
+```
+
+With React Hook Form:
+
+```tsx
+import { useForm } from 'react-hook-form';
+import { RhfIdAutocomplete, RhfTitleCaseField } from '@rbalukja15/ui-components/rhf';
+import { RhfDatePickerField } from '@rbalukja15/ui-components/date-picker/rhf';
+
+// `people` as in the controlled example.
+
+interface ProjectValues {
+  name: string;
+  ownerId: number | null;
+  startDate: string;
+}
+
+function ProjectForm({ onSave }: { onSave: (values: ProjectValues) => void }) {
+  const { control, handleSubmit } = useForm<ProjectValues>({
+    defaultValues: { name: '', ownerId: null, startDate: '' },
+  });
+
+  return (
+    <form noValidate onSubmit={handleSubmit(onSave)}>
+      <RhfTitleCaseField name="name" control={control} label="Project name" required rules={{ required: 'Enter a name' }} />
+      <RhfIdAutocomplete name="ownerId" control={control} label="Owner" options={people} />
+      <RhfDatePickerField name="startDate" control={control} label="Start date" />
+      <button type="submit">Save</button>
+    </form>
+  );
+}
+```
+
+The `required` prop only marks the field; the `required` rule is what checks it.
 
 ## Design principles
 
@@ -148,7 +240,7 @@ npm run test          # vitest
 npm run build         # tsup -> ESM + CJS + .d.ts
 ```
 
-CI (lint, typecheck, test, build) runs on every push, plus a compatibility matrix that typechecks and tests against each supported MUI major; Storybook deploys to GitHub Pages from `main`.
+CI (lint, typecheck, test, build) runs on every push, plus a compatibility matrix that typechecks and tests against each supported MUI major and each supported `@mui/x-date-pickers` major, and an install check that packs the library and runs a plain `npm install` of it in a fresh app on each MUI major; Storybook deploys to GitHub Pages from `main`.
 
 ### Releasing
 
@@ -158,12 +250,13 @@ Versions and the [changelog](./CHANGELOG.md) are managed with [Changesets](https
 2. When that PR lands on `main`, the Release workflow opens a "chore: release" PR that bumps the version and updates `CHANGELOG.md`.
 3. Merging the release PR publishes the new version to npm with provenance. Publishing uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers), so no npm token is stored in the repo.
 
-## Porting guide (remaining components from the source app)
+## Porting guide (remaining pieces from the source app)
 
-These are queued for future extraction, gated on demand. The pattern for each:
+These are queued for future extraction, gated on demand:
 
-- **`AppDatePicker`, `FkAutocomplete`, `TitleCaseField`** — currently bound to React Hook Form via `Controller`. Ship the presentational/controlled version first, then add a `*.rhf.tsx` adapter that wraps it. Both export from the same folder.
 - **`useUrlState`** — generalise the query-string keys so they're passed in rather than hardcoded.
+
+A form control follows the pattern in [Forms](#forms): the controlled component goes in its folder's `index.ts` and the main entry, and its `*.rhf.tsx` adapter is exported only from a subpath entry, so the main entry never imports an optional peer.
 
 ## License
 

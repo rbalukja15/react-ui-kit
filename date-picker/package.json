@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "sideEffects": false,
+  "main": "../dist/date-picker.cjs",
+  "module": "../dist/date-picker.js",
+  "types": "../dist/date-picker.d.ts"
+}
