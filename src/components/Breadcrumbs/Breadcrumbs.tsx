@@ -4,7 +4,7 @@ import type { SxProps, Theme } from '@mui/material/styles';
 
 export interface Crumb {
   label: string;
-  /** Where the crumb links to. Leave it out on the current page. */
+  /** Where the crumb links to. Ignored on the last crumb, which is the current page. */
   href?: string;
 }
 
@@ -32,9 +32,10 @@ function Chevron() {
 }
 
 /**
- * Breadcrumb trail for detail-page headers. Crumbs with an `href` render as
- * links to their parent pages; a crumb without one renders as the current
- * page (`aria-current="page"`), normally the last item.
+ * Breadcrumb trail for detail-page headers. The last crumb is the current
+ * page (`aria-current="page"`) and never a link; earlier crumbs link to their
+ * `href`, or render as plain text without one. Spacing is left to the caller
+ * (`sx`).
  */
 export function Breadcrumbs({
   items,
@@ -44,25 +45,34 @@ export function Breadcrumbs({
   sx,
 }: BreadcrumbsProps) {
   return (
-    <MuiBreadcrumbs separator={separator} aria-label={label} sx={[{ mb: 2 }, ...(Array.isArray(sx) ? sx : [sx])]}>
-      {items.map((crumb, i) =>
-        crumb.href ? (
-          <MuiLink
+    <MuiBreadcrumbs separator={separator} aria-label={label} sx={sx}>
+      {items.map((crumb, i) => {
+        const isLast = i === items.length - 1;
+        if (crumb.href && !isLast) {
+          return (
+            <MuiLink
+              key={i}
+              href={crumb.href}
+              underline="hover"
+              color="inherit"
+              sx={{ display: 'inline-flex', alignItems: 'center' }}
+              {...(LinkComponent ? { component: LinkComponent } : {})}
+            >
+              {crumb.label}
+            </MuiLink>
+          );
+        }
+        return (
+          <Typography
             key={i}
-            href={crumb.href}
-            underline="hover"
-            color="inherit"
-            sx={{ display: 'inline-flex', alignItems: 'center' }}
-            {...(LinkComponent ? { component: LinkComponent } : {})}
+            color={isLast ? 'text.primary' : 'inherit'}
+            aria-current={isLast ? 'page' : undefined}
+            sx={isLast ? { fontWeight: 600 } : undefined}
           >
             {crumb.label}
-          </MuiLink>
-        ) : (
-          <Typography key={i} color="text.primary" aria-current="page" sx={{ fontWeight: 600 }}>
-            {crumb.label}
           </Typography>
-        ),
-      )}
+        );
+      })}
     </MuiBreadcrumbs>
   );
 }

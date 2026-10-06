@@ -25,6 +25,23 @@ describe('<TruncatedText>', () => {
     expect(await screen.findByRole('tooltip')).toHaveTextContent('A very long project name');
   });
 
+  it('is focusable only while overflowing, and opens the tooltip on focus', async () => {
+    mockWidths(300, 100);
+    render(<TruncatedText text="A very long project name" />);
+    const el = screen.getByText('A very long project name');
+    expect(el).toHaveAttribute('tabindex', '0');
+    // MUI opens a tooltip on focus only when focus came from the keyboard.
+    fireEvent.keyDown(document.body, { key: 'Tab' });
+    act(() => el.focus());
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('A very long project name');
+  });
+
+  it('is not focusable when the text fits', () => {
+    mockWidths(100, 100);
+    render(<TruncatedText text="Fits" />);
+    expect(screen.getByText('Fits')).not.toHaveAttribute('tabindex');
+  });
+
   it('shows no tooltip when the text fits', async () => {
     vi.useFakeTimers();
     mockWidths(100, 100);

@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { Box } from '@mui/material';
+import { Box, type BoxProps } from '@mui/material';
 
-export interface RowActionsProps {
+export interface RowActionsProps extends BoxProps {
   children: React.ReactNode;
 }
 
@@ -20,17 +20,24 @@ export interface RowActionsProps {
  *   </RowActions>
  * </TableCell>
  * ```
+ *
+ * Other props go to the wrapping `Box`, e.g. `role="group"` with an
+ * `aria-label` to name each row's action set, or `sx` to change the gap.
  */
-export function RowActions({ children }: RowActionsProps) {
+export function RowActions({ children, sx, ...props }: RowActionsProps) {
   return (
     <Box
-      sx={{
-        display: 'inline-flex',
-        flexWrap: 'nowrap',
-        alignItems: 'center',
-        gap: 0.25,
-        whiteSpace: 'nowrap',
-      }}
+      {...props}
+      sx={[
+        {
+          display: 'inline-flex',
+          flexWrap: 'nowrap',
+          alignItems: 'center',
+          gap: 0.25,
+          whiteSpace: 'nowrap',
+        },
+        ...(Array.isArray(sx) ? sx : [sx]),
+      ]}
     >
       {children}
     </Box>

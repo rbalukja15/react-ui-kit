@@ -17,6 +17,20 @@ describe('<Breadcrumbs>', () => {
     expect(screen.getByText('Edit')).toHaveAttribute('aria-current', 'page');
   });
 
+  it('marks only the last crumb as the current page', () => {
+    render(
+      <Breadcrumbs
+        items={[{ label: 'Clients', href: '/clients' }, { label: 'Archived' }, { label: 'Jane Doe', href: '/clients/1' }]}
+      />,
+    );
+    expect(screen.getByText('Archived')).not.toHaveAttribute('aria-current');
+    expect(screen.queryByRole('link', { name: 'Archived' })).not.toBeInTheDocument();
+    // The last crumb is the current page even when it has an href.
+    expect(screen.queryByRole('link', { name: 'Jane Doe' })).not.toBeInTheDocument();
+    expect(screen.getByText('Jane Doe')).toHaveAttribute('aria-current', 'page');
+    expect(document.querySelectorAll('[aria-current]')).toHaveLength(1);
+  });
+
   it('names the navigation landmark, with an overridable label', () => {
     const { rerender } = render(<Breadcrumbs items={items} />);
     expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toBeInTheDocument();

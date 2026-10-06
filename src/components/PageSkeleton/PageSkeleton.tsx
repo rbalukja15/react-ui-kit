@@ -69,9 +69,14 @@ function ListCard({ tabs }: { tabs: boolean }) {
  *
  * Screen readers hear a single "Loading" status; the placeholder shapes are
  * hidden from them. The status text is the region's own (visually hidden)
- * content, because a live region announces its content, not its label.
+ * content, because a live region announces its content, not its label. It is
+ * filled in after mount: many screen readers only announce changes to a
+ * region that is already in the page, not text it was inserted with.
  */
 export function PageSkeleton({ variant = 'list', label = 'Loading' }: PageSkeletonProps) {
+  const [announce, setAnnounce] = React.useState(false);
+  React.useEffect(() => setAnnounce(true), []);
+
   const side = (
     <Card>
       <CardContent>
@@ -89,7 +94,7 @@ export function PageSkeleton({ variant = 'list', label = 'Loading' }: PageSkelet
   return (
     <Box role="status">
       <Box component="span" sx={visuallyHidden}>
-        {label}
+        {announce ? label : ''}
       </Box>
       <Box aria-hidden="true" data-variant={variant}>
         {/* Breadcrumbs, then the title and subtitle. */}

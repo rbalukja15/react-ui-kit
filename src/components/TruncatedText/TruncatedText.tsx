@@ -10,6 +10,9 @@ export interface TruncatedTextProps extends Omit<TypographyProps, 'children' | '
  * in a tooltip, but only while it is actually cut off, so short values get no
  * pointless tooltip. Keeps table rows a uniform height whatever the content.
  *
+ * While the text is cut off it is also focusable, so keyboard users can open
+ * the tooltip too.
+ *
  * Bound the width from the parent (a cell `maxWidth`, or `minWidth: 0` on a
  * flex child); this component handles the ellipsis and the tooltip.
  */
@@ -33,7 +36,7 @@ export function TruncatedText({ text, ...props }: TruncatedTextProps) {
     // An empty title renders no tooltip. MUI merges its ref with ours, so the
     // measuring ref keeps working.
     <Tooltip title={overflowing ? text : ''}>
-      <Typography ref={ref} noWrap {...props}>
+      <Typography ref={ref} noWrap tabIndex={overflowing ? 0 : undefined} {...props}>
         {text}
       </Typography>
     </Tooltip>
