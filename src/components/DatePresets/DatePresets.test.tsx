@@ -14,6 +14,18 @@ describe('addToDate', () => {
     expect(addToDate(base, -1, 'month')).toEqual(local(2026, 2, 15));
   });
 
+  it('goes back in time with negative weeks and years', () => {
+    expect(addToDate(local(2026, 3, 4), -1, 'week')).toEqual(local(2026, 2, 25));
+    expect(addToDate(local(2026, 3, 15), -2, 'year')).toEqual(local(2024, 3, 15));
+    expect(addToDate(local(2028, 2, 29), -1, 'year')).toEqual(local(2027, 2, 28));
+  });
+
+  it('returns the same day for an amount of 0', () => {
+    for (const unit of ['day', 'week', 'month', 'year'] as const) {
+      expect(addToDate(local(2026, 1, 31), 0, unit)).toEqual(local(2026, 1, 31));
+    }
+  });
+
   it('clamps to the end of shorter months', () => {
     expect(addToDate(local(2026, 1, 31), 1, 'month')).toEqual(local(2026, 2, 28));
     expect(addToDate(local(2028, 1, 31), 1, 'month')).toEqual(local(2028, 2, 29));

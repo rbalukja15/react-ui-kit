@@ -10,6 +10,10 @@ export interface StatusChipAction {
   onClick: () => void;
 }
 
+/**
+ * Chip props pass through, except `onClick`: the chip owns its click, which
+ * opens the status menu. React to a pick with `onChange` or `actions`.
+ */
 export interface StatusChipProps<S extends string = string>
   extends Omit<ChipProps, 'label' | 'color' | 'onClick' | 'onChange' | 'children'> {
   /** The current status. */
