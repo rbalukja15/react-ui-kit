@@ -4,11 +4,17 @@ import { useUrlAdapter } from './UrlStateProvider';
 /** A value `useUrlState` can keep in the query string. */
 export type UrlStateValue = string | number | boolean;
 
+const DECIMAL = /^-?\d+(\.\d+)?$/;
+
+// useLayoutEffect warns when rendered on the server, where it never runs.
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
+
 /**
  * Parse a query string into a typed state bag, using `defaults` for absent
- * keys. Each default's type drives parsing: a number default reads the param
- * as a number (falling back to the default when it is not one), a boolean
- * default reads `1` or `true` as true, and anything else stays a string.
+ * keys. Each default's type drives parsing: a number default reads a plain
+ * decimal such as `2` or `-1.5` (anything else, like `1e3` or `0x10`, keeps
+ * the default), a boolean default reads `1` or `true` in any case as true,
+ * and anything else stays a string.
  */
 export function readUrlState<T extends Record<string, UrlStateValue>>(
   defaults: T,
@@ -20,10 +26,9 @@ export function readUrlState<T extends Record<string, UrlStateValue>>(
     if (raw === null) return;
     const fallback = defaults[key];
     if (typeof fallback === 'number') {
-      const parsed = raw.trim() === '' ? NaN : Number(raw);
-      if (Number.isFinite(parsed)) out[key] = parsed as T[typeof key];
+      if (DECIMAL.test(raw)) out[key] = Number(raw) as T[typeof key];
     } else if (typeof fallback === 'boolean') {
-      out[key] = (raw === '1' || raw === 'true') as T[typeof key];
+      out[key] = (raw === '1' || raw.toLowerCase() === 'true') as T[typeof key];
     } else {
       out[key] = raw as T[typeof key];
     }
@@ -52,6 +57,30 @@ export function applyUrlPatch<T extends Record<string, UrlStateValue>>(
   return params;
 }
 
+interface PendingWrites {
+  /** The last query string the router reported. */
+  base: string;
+  /** Our writes since then, oldest first. */
+  writes: string[];
+}
+
+function normalize(search: string): string {
+  return new URLSearchParams(search).toString();
+}
+
+/**
+ * Fold the query string the router reports now into the writes still in
+ * flight. One of our writes coming back settles it and every write before
+ * it, keeping the later ones; anything else is an outside navigation, which
+ * replaces them all.
+ */
+export function settleWrites(pending: PendingWrites, reported: string): PendingWrites {
+  if (reported === pending.base) return pending;
+  const index = pending.writes.indexOf(reported);
+  if (index === -1) return { base: reported, writes: [] };
+  return { base: reported, writes: pending.writes.slice(index + 1) };
+}
+
 /**
  * Keep a bag of state in the URL query string, typed by its defaults.
  *
@@ -71,20 +100,26 @@ export function useUrlState<T extends Record<string, UrlStateValue>>(
 ): [T, (patch: Partial<T>) => void] {
   const { search, replace } = useUrlAdapter();
 
-  // The query string the next write builds on. A router can take a render
-  // or more to report a write back, so two patches in a row (or a patch
-  // straight after typing) would otherwise both start from the old URL and
-  // the second would undo the first. It follows the adapter again whenever
-  // the URL really changes.
-  const latest = React.useRef({ seen: search, search });
-  if (latest.current.seen !== search) latest.current = { seen: search, search };
+  // Writes the router has not reported back yet. A router can take a render
+  // or more to report a write, so two patches in a row (or a patch straight
+  // after typing) would otherwise both start from the old URL and the second
+  // would undo the first. Only touched from setState, never during render.
+  const pending = React.useRef<PendingWrites>({ base: normalize(search), writes: [] });
+  // The committed URL, so a setState kept from an earlier render does not
+  // take the URL it saw for an outside navigation.
+  const reported = React.useRef(search);
+  useIsomorphicLayoutEffect(() => {
+    reported.current = search;
+  }, [search]);
 
   const state = React.useMemo(() => readUrlState(defaults, new URLSearchParams(search)), [defaults, search]);
 
   const setState = React.useCallback(
     (patch: Partial<T>) => {
-      const next = applyUrlPatch(defaults, new URLSearchParams(latest.current.search), patch).toString();
-      latest.current.search = next;
+      const settled = settleWrites(pending.current, normalize(reported.current));
+      const from = settled.writes[settled.writes.length - 1] ?? settled.base;
+      const next = applyUrlPatch(defaults, new URLSearchParams(from), patch).toString();
+      pending.current = { base: settled.base, writes: [...settled.writes, next] };
       replace(next);
     },
     [defaults, replace],

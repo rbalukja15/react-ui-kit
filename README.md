@@ -228,9 +228,9 @@ The `required` prop only marks the field; the `required` rule is what checks it.
 
 ## URL state
 
-`useUrlState` keeps a bag of filters in the query string, typed by its defaults. A number default reads its param as a number, a boolean default reads `1` or `true`, anything else stays a string. `setState` takes a partial patch and replaces the URL rather than pushing, so filtering never fills the history. Params equal to their default are left out of the URL, and params the defaults do not name are kept. Define the defaults outside the component, so they keep one identity.
+`useUrlState` keeps a bag of filters in the query string, typed by its defaults. A number default reads a plain decimal (`2`, `-1.5`) and keeps the default for anything else, a boolean default reads `1` or `true` in any case as true, and anything else stays a string. `setState` takes a partial patch and replaces the URL rather than pushing, so filtering never fills the history. Params equal to their default are left out of the URL, and params the defaults do not name are kept. Define the defaults outside the component, so they keep one identity.
 
-`useUrlSearch` pairs a search box with one of those params. The box keeps its own state, so no keystroke is lost while the router catches up, and the third value is the box's text once typing pauses (300 ms by default), which is what the list should fetch with. When the URL changes from outside (a link back to the bare list, Back), the box follows it.
+`useUrlSearch` pairs a search box with one of those params. The box keeps its own state, so no keystroke is lost while the router catches up, and the third value is the box's text once typing pauses (300 ms by default), which is what the list should fetch with. When the URL changes from outside (a link back to the bare list, Back), the box follows it. Its `commit` callback runs on every keystroke, so it should write through `useUrlState` (or another replace): a push would add a history entry per key.
 
 ```tsx
 import { TextField } from '@mui/material';
@@ -264,7 +264,11 @@ export function NextUrlStateProvider({ children }: { children: ReactNode }) {
   const adapter = useMemo<UrlAdapter>(
     () => ({
       search: searchParams.toString(),
-      replace: (search) => router.replace(search ? `${pathname}?${search}` : pathname, { scroll: false }),
+      replace: (search) => {
+        // usePathname can be null under the Pages Router; fall back to the address bar.
+        const path = pathname ?? window.location.pathname;
+        router.replace(search ? `${path}?${search}` : path, { scroll: false });
+      },
     }),
     [searchParams, router, pathname],
   );
