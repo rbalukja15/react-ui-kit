@@ -35,6 +35,17 @@ describe('findActiveIndex', () => {
     expect(findActiveIndex(items, '/elsewhere')).toBe(-1);
   });
 
+  it('ignores the query string and hash when comparing lengths', () => {
+    const tabs = [
+      { label: 'Report tab', href: '/reports?tab=a', icon: null },
+      { label: 'Reports', href: '/reports', icon: null },
+      { label: 'Report', href: '/reports/x', icon: null },
+    ];
+    expect(findActiveIndex(tabs, '/reports/x')).toBe(2);
+    // Equal paths: the first one listed wins.
+    expect(findActiveIndex(tabs, '/reports')).toBe(0);
+  });
+
   it('returns -1 without a current path', () => {
     expect(findActiveIndex(items, undefined)).toBe(-1);
   });

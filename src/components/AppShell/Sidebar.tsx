@@ -18,7 +18,8 @@ interface SidebarProps {
   collapsed: boolean;
   mobileOpen: boolean;
   onMobileClose: () => void;
-  drawerId: string;
+  /** Off until the first values are painted, so a stored state doesn't animate in. */
+  animate: boolean;
 }
 
 const widthTransition = (theme: Theme) =>
@@ -47,7 +48,7 @@ export function Sidebar({
   collapsed,
   mobileOpen,
   onMobileClose,
-  drawerId,
+  animate,
 }: SidebarProps) {
   const active = findActiveIndex(items, currentPath, isActive);
   const footerActive = findActiveIndex(footerItems ?? [], currentPath, isActive);
@@ -118,11 +119,10 @@ export function Sidebar({
         // step with the drawer paper.
         width: { [breakpoint]: desktopWidth },
         flexShrink: { [breakpoint]: 0 },
-        transition: widthTransition,
+        transition: animate ? widthTransition : 'none',
       }}
     >
       <Drawer
-        id={drawerId}
         variant="temporary"
         open={mobileOpen}
         onClose={onMobileClose}
@@ -148,7 +148,7 @@ export function Sidebar({
             boxSizing: 'border-box',
             // Keeps labels from peeking out while the width animates.
             overflowX: 'hidden',
-            transition: widthTransition,
+            transition: animate ? widthTransition : 'none',
           },
         }}
       >

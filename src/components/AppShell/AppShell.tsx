@@ -94,6 +94,20 @@ function useCollapsed({
     if (stored !== null) setUncontrolled(stored);
   }, [isControlled, storageKey]);
 
+  // The width transition stays off until the first values are painted, so a
+  // stored collapsed state applies instantly instead of animating on load.
+  const [animate, setAnimate] = React.useState(false);
+  React.useEffect(() => {
+    let inner = 0;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => setAnimate(true));
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
+  }, []);
+
   const value = isControlled ? collapsed : uncontrolled;
   const toggle = () => {
     const next = !value;
@@ -103,7 +117,7 @@ function useCollapsed({
     }
     onCollapsedChange?.(next);
   };
-  return [value, toggle] as const;
+  return [value, toggle, animate] as const;
 }
 
 /**
@@ -141,14 +155,13 @@ export function AppShell({
   labels,
   mainSx,
 }: AppShellProps) {
-  const [collapsed, toggleCollapsed] = useCollapsed({
+  const [collapsed, toggleCollapsed, animate] = useCollapsed({
     collapsed: controlledCollapsed,
     defaultCollapsed,
     onCollapsedChange,
     storageKey,
   });
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const drawerId = `app-shell-drawer-${React.useId().replace(/:/g, '')}`;
   const {
     navigation = 'Main navigation',
     bottomNavigation = 'Quick navigation',
@@ -176,7 +189,7 @@ export function AppShell({
         collapsed={collapsed}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
-        drawerId={drawerId}
+        animate={animate}
       />
       {/* minWidth: 0 lets wide content (tables) scroll inside the column
           instead of pushing the layout past the viewport. */}
@@ -192,7 +205,6 @@ export function AppShell({
               color="inherit"
               edge="start"
               aria-label={openNavigation}
-              aria-controls={drawerId}
               aria-expanded={mobileOpen}
               onClick={() => setMobileOpen(true)}
               sx={{ display: { xs: 'inline-flex', [breakpoint]: 'none' } }}

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { AppShell } from './AppShell';
 
 const icon = <svg aria-hidden="true" width="24" height="24" />;
@@ -10,7 +10,8 @@ const navItems = [
 ];
 
 // The permanent drawer is always in the DOM; the overlay only while open.
-const sidebar = () => screen.getAllByRole('navigation', { name: 'Main navigation' })[0];
+const sidebar = () => screen.getAllByRole('navigation', { name: 'Main navigation' })[0]!;
+const overlay = () => document.querySelector<HTMLElement>('.MuiDrawer-modal')!;
 
 describe('<AppShell>', () => {
   afterEach(() => window.localStorage.clear());
@@ -165,10 +166,56 @@ describe('<AppShell>', () => {
     expect(menu).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(menu);
     expect(menu).toHaveAttribute('aria-expanded', 'true');
-    const drawer = document.getElementById(menu.getAttribute('aria-controls')!)!;
+    const drawer = overlay();
     expect(drawer).toBeInTheDocument();
     fireEvent.click(within(drawer).getByRole('link', { name: 'Invoices' }));
     expect(menu).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('closes the mobile drawer after an action item runs', () => {
+    const onLogout = vi.fn();
+    render(
+      <AppShell navItems={navItems} footerItems={[{ label: 'Log out', icon, onClick: onLogout }]}>
+        x
+      </AppShell>,
+    );
+    const menu = screen.getByRole('button', { name: 'Open navigation' });
+    fireEvent.click(menu);
+    fireEvent.click(within(overlay()).getByRole('button', { name: 'Log out' }));
+    expect(onLogout).toHaveBeenCalledTimes(1);
+    expect(menu).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('shows the label as a tooltip on the collapsed rail only', async () => {
+    render(
+      <AppShell navItems={navItems} footerItems={[{ label: 'Log out', icon, onClick: () => {} }]}>
+        x
+      </AppShell>,
+    );
+    fireEvent.mouseOver(within(sidebar()).getByRole('link', { name: 'Clients' }));
+    // Expanded rows show the label as text, so no tooltip opens.
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }));
+    const link = within(sidebar()).getByRole('link', { name: 'Clients' });
+    expect(link).toHaveAttribute('aria-label', 'Clients');
+    expect(within(sidebar()).getByRole('button', { name: 'Log out' })).toHaveAttribute('aria-label', 'Log out');
+    fireEvent.mouseOver(link);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Clients');
+  });
+
+  it('applies a stored collapsed state without animating it in', async () => {
+    window.localStorage.setItem('test:sidebar', '1');
+    render(
+      <AppShell navItems={navItems} storageKey="test:sidebar">
+        x
+      </AppShell>,
+    );
+    const paper = sidebar().closest('.MuiDrawer-paper')!;
+    expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBeInTheDocument();
+    expect(getComputedStyle(paper).transition).toBe('none');
+    await waitFor(() => expect(getComputedStyle(paper).transition).toContain('width'));
   });
 
   it('renders the bottom bar only when bottomNavItems are given', () => {

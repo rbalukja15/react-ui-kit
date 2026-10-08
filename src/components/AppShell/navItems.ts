@@ -48,9 +48,11 @@ export function findActiveIndex(items: NavItem[], currentPath: string | undefine
       return;
     }
     if (item.href === undefined || !isPathActive(item.href, currentPath)) return;
-    if (item.href.length > bestLength) {
+    // Compare paths only, so a query string or hash doesn't make an href win.
+    const length = stripSearch(item.href).length;
+    if (length > bestLength) {
       best = i;
-      bestLength = item.href.length;
+      bestLength = length;
     }
   });
   return best;

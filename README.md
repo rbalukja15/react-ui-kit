@@ -270,7 +270,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 With react-router, pass `useLocation().pathname` and a small wrapper that maps `href` to `to`, since its `Link` takes `to`.
 
-An item is active when the current path is its `href` or below it (`/clients` matches `/clients/42`; `/` matches only itself), ignoring the query string and hash; when several match, the longest `href` wins. `isPathActive` exports that rule, and `isActive` replaces it. The collapsed state is uncontrolled by default; `storageKey` remembers it, read after hydration so server HTML always renders `defaultCollapsed`. Pass `collapsed` and `onCollapsedChange` to own it. Every built-in label (landmark names, the menu and collapse buttons) is overridable through `labels`.
+An item is active when the current path is its `href` or below it (`/clients` matches `/clients/42`; `/` matches only itself), ignoring the query string and hash; when several match, the longest `href` wins. `isPathActive` exports that rule, and `isActive` replaces it; a custom `isActive` is first-match instead, so the first item it accepts is the active one. The collapsed state is uncontrolled by default; `storageKey` remembers it, read after hydration so server HTML always renders `defaultCollapsed`. The stored state is applied before the width animation turns on, so a sidebar saved as collapsed snaps to the rail on load rather than animating there, though it can show expanded for the first frame. Pass `collapsed` and `onCollapsedChange` to own it. Every built-in label (landmark names, the menu and collapse buttons) is overridable through `labels`.
 
 ## Design principles
 
