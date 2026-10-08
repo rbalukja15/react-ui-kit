@@ -22,5 +22,8 @@ export type {
 
 // Hooks
 export { useDebouncedValue } from './hooks/useDebouncedValue';
-
-// --- TODO: port the useUrlState hook into src/hooks/. See README "Porting guide". ---
+export { useUrlState } from './hooks/useUrlState';
+export type { UrlStateValue } from './hooks/useUrlState';
+export { useUrlSearch } from './hooks/useUrlSearch';
+export { UrlStateProvider } from './hooks/UrlStateProvider';
+export type { UrlAdapter, UrlStateProviderProps } from './hooks/UrlStateProvider';

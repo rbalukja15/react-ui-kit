@@ -136,6 +136,8 @@ The stored choice and the OS setting are only read in the browser. Server HTML r
 | `TruncatedText` | One-line text with an ellipsis | Tooltip with the full text only when it is cut off |
 | `ThemeModeProvider` | MUI theme + light/dark/system mode | Controlled or uncontrolled; opt-in `localStorage` persistence |
 | `useDebouncedValue` | Debounce any value | — |
+| `useUrlState` | Typed state kept in the URL query string | Router is injectable; see [URL state](#url-state) |
+| `useUrlSearch` | Search box synced to the URL without lost keystrokes | Debounced query for fetching; see [URL state](#url-state) |
 
 ## Forms
 
@@ -224,6 +226,76 @@ function ProjectForm({ onSave }: { onSave: (values: ProjectValues) => void }) {
 
 The `required` prop only marks the field; the `required` rule is what checks it.
 
+## URL state
+
+`useUrlState` keeps a bag of filters in the query string, typed by its defaults. A number default reads a plain decimal (`2`, `-1.5`) and keeps the default for anything else, a boolean default reads `1` or `true` in any case as true, and anything else stays a string. `setState` takes a partial patch and replaces the URL rather than pushing, so filtering never fills the history. Params equal to their default are left out of the URL, and params the defaults do not name are kept. Define the defaults outside the component, so they keep one identity.
+
+`useUrlSearch` pairs a search box with one of those params. The box keeps its own state, so no keystroke is lost while the router catches up, and the third value is the box's text once typing pauses (300 ms by default), which is what the list should fetch with. When the URL changes from outside (a link back to the bare list, Back), the box follows it. Its `commit` callback runs on every keystroke, so it should write through `useUrlState` (or another replace): a push would add a history entry per key.
+
+```tsx
+import { TextField } from '@mui/material';
+import { useUrlSearch, useUrlState } from '@rbalukja15/ui-components';
+
+const FILTERS = { q: '', page: 0, archived: false };
+
+function ProjectsPage() {
+  const [{ q, page, archived }, setFilters] = useUrlState(FILTERS);
+  const [search, setSearch, query] = useUrlSearch(q, (value) => setFilters({ q: value, page: 0 }));
+  const projects = useProjects({ query, page, archived }); // your data hook
+
+  return <TextField label="Search" value={search} onChange={(event) => setSearch(event.target.value)} />;
+}
+```
+
+Without a provider the hooks read and write `window.location` through the history API, which suits apps without a router. Server HTML then renders the defaults, and the real query string is applied straight after hydration. With a router, pass its search params to `UrlStateProvider`, so the hooks and the router share one URL and server HTML matches it. The adapter is `{ search, replace }`: the current query string, and a function that replaces it without adding a history entry. Memoize it.
+
+Next.js App Router (wrap the provider in `<Suspense>`, as `useSearchParams` needs one on statically rendered routes):
+
+```tsx
+'use client';
+import { useMemo, type ReactNode } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { UrlStateProvider, type UrlAdapter } from '@rbalukja15/ui-components';
+
+export function NextUrlStateProvider({ children }: { children: ReactNode }) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const adapter = useMemo<UrlAdapter>(
+    () => ({
+      search: searchParams.toString(),
+      replace: (search) => {
+        // usePathname can be null under the Pages Router; fall back to the address bar.
+        const path = pathname ?? window.location.pathname;
+        router.replace(search ? `${path}?${search}` : path, { scroll: false });
+      },
+    }),
+    [searchParams, router, pathname],
+  );
+  return <UrlStateProvider adapter={adapter}>{children}</UrlStateProvider>;
+}
+```
+
+React Router 6.4 or later:
+
+```tsx
+import { useMemo, type ReactNode } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { UrlStateProvider, type UrlAdapter } from '@rbalukja15/ui-components';
+
+export function RouterUrlStateProvider({ children }: { children: ReactNode }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const adapter = useMemo<UrlAdapter>(
+    () => ({
+      search: searchParams.toString(),
+      replace: (search) => setSearchParams(search, { replace: true, preventScrollReset: true }),
+    }),
+    [searchParams, setSearchParams],
+  );
+  return <UrlStateProvider adapter={adapter}>{children}</UrlStateProvider>;
+}
+```
+
 ## Design principles
 
 - **No hidden coupling.** A component never imports the router, a store, an API client, or i18n. Anything app-specific comes in through props.
@@ -250,11 +322,7 @@ Versions and the [changelog](./CHANGELOG.md) are managed with [Changesets](https
 2. When that PR lands on `main`, the Release workflow opens a "chore: release" PR that bumps the version and updates `CHANGELOG.md`.
 3. Merging the release PR publishes the new version to npm with provenance. Publishing uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers), so no npm token is stored in the repo.
 
-## Porting guide (remaining pieces from the source app)
-
-These are queued for future extraction, gated on demand:
-
-- **`useUrlState`** — generalise the query-string keys so they're passed in rather than hardcoded.
+## Porting guide
 
 A form control follows the pattern in [Forms](#forms): the controlled component goes in its folder's `index.ts` and the main entry, and its `*.rhf.tsx` adapter is exported only from a subpath entry, so the main entry never imports an optional peer.
 
