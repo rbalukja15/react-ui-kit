@@ -1,4 +1,5 @@
 // Components
+export * from './components/AppShell';
 export * from './components/Breadcrumbs';
 export * from './components/ConfirmDialog';
 export * from './components/EmptyState';

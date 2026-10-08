@@ -123,6 +123,8 @@ The stored choice and the OS setting are only read in the browser. Server HTML r
 
 | Component | What it does | Notes |
 | --- | --- | --- |
+| `AppShell` | Responsive app layout: sidebar, sticky header, page content and an optional mobile bottom bar | Collapsible icon rail with opt-in `localStorage` persistence; router-agnostic. See [App shell](#app-shell) |
+| `BottomNav` | Fixed mobile bottom navigation bar | Used by `AppShell`, also usable alone; link is injectable |
 | `Breadcrumbs` | Breadcrumb trail for detail-page headers | Link is injectable; last crumb gets `aria-current="page"` |
 | `ConfirmDialog` | Promise-based `confirm()` replacement via context + `useConfirm()` hook | Labels are props (no i18n dependency) |
 | `DatePickerField` | Date input with a popover calendar; the value is an ISO `YYYY-MM-DD` string | From `/date-picker` (needs `@mui/x-date-pickers` and `dayjs`); RHF adapter from `/date-picker/rhf`. See [Forms](#forms) |
@@ -223,6 +225,52 @@ function ProjectForm({ onSave }: { onSave: (values: ProjectValues) => void }) {
 ```
 
 The `required` prop only marks the field; the `required` rule is what checks it.
+
+## App shell
+
+`AppShell` lays out a whole app: a sidebar, a sticky header with the page title and your actions, and the page in a `<main>` landmark. From `breakpoint` (`md` by default) up, the sidebar is permanent and the header's toggle collapses it to an icon rail, with labels as tooltips. Below it, the sidebar is an overlay opened from the header's menu button, and `bottomNavItems`, if given, show as a fixed bottom bar.
+
+It does no routing, permission checks or auth. You pass the items the user may see, the current path to mark the active one, and your router's link component. Actions such as logout are items with an `onClick` and no `href`. With Next.js:
+
+```tsx
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { AppShell, type NavItem } from '@rbalukja15/ui-components';
+
+const nav: NavItem[] = [
+  { label: 'Dashboard', href: '/', icon: <DashboardIcon /> },
+  { label: 'Clients', href: '/clients', icon: <PeopleIcon /> },
+  { label: 'Invoices', href: '/invoices', icon: <ReceiptIcon /> },
+];
+
+export function Layout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const { user, can, logout } = useSession(); // your app's own auth
+
+  return (
+    <AppShell
+      navItems={nav.filter((item) => can(item.href))}
+      footerItems={[{ label: 'Log out', icon: <LogoutIcon />, onClick: logout }]}
+      bottomNavItems={nav}
+      currentPath={pathname}
+      LinkComponent={Link}
+      brand={<Logo withName />}
+      collapsedBrand={<Logo />}
+      title={titleFor(pathname)}
+      headerActions={<AccountMenu user={user} />}
+      storageKey="my-app:sidebar-collapsed"
+    >
+      {children}
+    </AppShell>
+  );
+}
+```
+
+With react-router, pass `useLocation().pathname` and a small wrapper that maps `href` to `to`, since its `Link` takes `to`.
+
+An item is active when the current path is its `href` or below it (`/clients` matches `/clients/42`; `/` matches only itself), ignoring the query string and hash; when several match, the longest `href` wins. `isPathActive` exports that rule, and `isActive` replaces it; a custom `isActive` is first-match instead, so the first item it accepts is the active one. The collapsed state is uncontrolled by default; `storageKey` remembers it, read after hydration so server HTML always renders `defaultCollapsed`. The stored state is applied before the width animation turns on, so a sidebar saved as collapsed snaps to the rail on load rather than animating there, though it can show expanded for the first frame. Pass `collapsed` and `onCollapsedChange` to own it. Every built-in label (landmark names, the menu and collapse buttons) is overridable through `labels`.
 
 ## Design principles
 
