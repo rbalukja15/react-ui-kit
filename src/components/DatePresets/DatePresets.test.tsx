@@ -104,6 +104,22 @@ describe('<DatePresets>', () => {
     expect(onPick).toHaveBeenLastCalledWith('2027-01-07', local(2027, 1, 7));
   });
 
+  it('renders presets with the same interval without a duplicate-key warning', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(
+      <DatePresets
+        presets={[
+          { label: '1 month', amount: 1, unit: 'month' },
+          { label: 'Next month', amount: 1, unit: 'month' },
+        ]}
+        onPick={() => {}}
+      />,
+    );
+    expect(screen.getAllByRole('button')).toHaveLength(2);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
   it('does not pick while disabled', () => {
     const onPick = vi.fn();
     render(<DatePresets onPick={onPick} disabled />);
