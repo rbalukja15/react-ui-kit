@@ -8,7 +8,7 @@ export interface DatePreset {
   /** How many `unit`s to add to the base date. Negative values go back in time. */
   amount: number;
   unit: DatePresetUnit;
-  /** Defaults to `${amount}${unit}`. */
+  /** React key. Defaults to the label when it is a string, else the preset's position. */
   key?: string;
 }
 
@@ -115,9 +115,9 @@ export function DatePresets({
       aria-label={label}
       sx={[{ display: 'flex', flexWrap: 'wrap', gap: 1 }, ...(Array.isArray(sx) ? sx : [sx])]}
     >
-      {presets.map((preset) => (
+      {presets.map((preset, index) => (
         <Chip
-          key={preset.key ?? `${preset.amount}${preset.unit}`}
+          key={preset.key ?? (typeof preset.label === 'string' ? preset.label : index)}
           label={preset.label}
           size={size}
           variant={variant}

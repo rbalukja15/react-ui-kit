@@ -38,7 +38,7 @@ export interface StatusChipProps<S extends string = string>
 /** ArrowDropDown, inlined so the kit does not need `@mui/icons-material`. */
 function Caret() {
   return (
-    <svg aria-hidden="true" focusable="false" width="1.25em" height="1.25em" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: -2 }}>
+    <svg aria-hidden="true" focusable="false" width="1.25em" height="1.25em" viewBox="0 0 24 24" fill="currentColor" style={{ marginInlineStart: -2 }}>
       <path d="m7 10 5 5 5-5z" />
     </svg>
   );
