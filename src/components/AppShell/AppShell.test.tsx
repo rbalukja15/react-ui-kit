@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { AppShell } from './AppShell';
 
 const icon = <svg aria-hidden="true" width="24" height="24" />;
@@ -216,6 +216,66 @@ describe('<AppShell>', () => {
     expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBeInTheDocument();
     expect(getComputedStyle(paper).transition).toBe('none');
     await waitFor(() => expect(getComputedStyle(paper).transition).toContain('width'));
+  });
+
+  it('names the collapse toggle by its action, without aria-expanded', () => {
+    render(
+      <AppShell navItems={navItems}>
+        x
+      </AppShell>,
+    );
+    const toggle = screen.getByRole('button', { name: 'Collapse sidebar' });
+    expect(toggle).not.toHaveAttribute('aria-expanded');
+    fireEvent.click(toggle);
+    expect(screen.getByRole('button', { name: 'Expand sidebar' })).not.toHaveAttribute('aria-expanded');
+  });
+
+  it('closes the mobile drawer when the viewport grows past the breakpoint', () => {
+    let wide = false;
+    const listeners = new Set<() => void>();
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      get matches() {
+        return wide;
+      },
+      media: query,
+      addEventListener: (_: string, listener: () => void) => listeners.add(listener),
+      removeEventListener: (_: string, listener: () => void) => listeners.delete(listener),
+      addListener: (listener: () => void) => listeners.add(listener),
+      removeListener: (listener: () => void) => listeners.delete(listener),
+    }));
+    try {
+      render(
+        <AppShell navItems={navItems}>
+          x
+        </AppShell>,
+      );
+      const menu = screen.getByRole('button', { name: 'Open navigation' });
+      fireEvent.click(menu);
+      expect(menu).toHaveAttribute('aria-expanded', 'true');
+      act(() => {
+        wide = true;
+        listeners.forEach((listener) => listener());
+      });
+      expect(menu).toHaveAttribute('aria-expanded', 'false');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('marks one current page across the nav and footer lists', () => {
+    render(
+      <AppShell
+        navItems={[...navItems, { label: 'Settings', href: '/settings', icon }]}
+        footerItems={[{ label: 'Users', href: '/settings/users', icon }]}
+        currentPath="/settings/users"
+      >
+        x
+      </AppShell>,
+    );
+    const nav = sidebar();
+    expect(within(nav).getByRole('link', { name: 'Users' })).toHaveAttribute('aria-current', 'page');
+    expect(within(nav).getByRole('link', { name: 'Settings' })).not.toHaveAttribute('aria-current');
+    expect(nav.querySelectorAll('[aria-current]')).toHaveLength(1);
   });
 
   it('renders the bottom bar only when bottomNavItems are given', () => {

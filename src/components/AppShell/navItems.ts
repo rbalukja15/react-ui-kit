@@ -22,6 +22,8 @@ export type IsNavItemActive = (item: NavItem, currentPath: string) => boolean;
 export function isPathActive(href: string, currentPath: string): boolean {
   const path = stripSearch(currentPath);
   const target = stripSearch(href).replace(/(.)\/+$/, '$1');
+  // An empty target ('', '?tab=1', '#') names no page, so it never matches.
+  if (target === '') return false;
   if (target === '/') return path === '/';
   return path === target || path.startsWith(`${target}/`);
 }

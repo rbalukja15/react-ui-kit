@@ -20,6 +20,15 @@ describe('isPathActive', () => {
   });
 });
 
+describe('isPathActive with an empty target', () => {
+  it('never matches an href without a path', () => {
+    for (const href of ['', '?tab=1', '#', '#top']) {
+      expect(isPathActive(href, '/')).toBe(false);
+      expect(isPathActive(href, '/clients')).toBe(false);
+    }
+  });
+});
+
 describe('findActiveIndex', () => {
   const items = [
     { label: 'Home', href: '/', icon: null },

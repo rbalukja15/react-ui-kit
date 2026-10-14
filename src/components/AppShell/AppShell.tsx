@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { AppBar, Box, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
-import type { SxProps, Theme } from '@mui/material/styles';
+import { AppBar, Box, IconButton, Toolbar, Tooltip, Typography, useMediaQuery } from '@mui/material';
+import { useTheme, type SxProps, type Theme } from '@mui/material/styles';
 import { BottomNav } from './BottomNav';
 import { MenuIcon, MenuOpenIcon } from './icons';
 import type { IsNavItemActive, NavItem, ShellBreakpoint } from './navItems';
@@ -162,6 +162,14 @@ export function AppShell({
     storageKey,
   });
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  // The overlay is only hidden with CSS from `breakpoint` up, so close it when
+  // the viewport grows past it (a tablet rotating); otherwise its scroll lock
+  // and focus trap stay on behind an invisible drawer.
+  const theme = useTheme();
+  const isWide = useMediaQuery(theme.breakpoints.up(breakpoint));
+  React.useEffect(() => {
+    if (isWide) setMobileOpen(false);
+  }, [isWide]);
   const {
     navigation = 'Main navigation',
     bottomNavigation = 'Quick navigation',
@@ -173,7 +181,14 @@ export function AppShell({
   const hasBottomNav = bottomNavItems !== undefined && bottomNavItems.length > 0;
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        // The visible height on mobile browsers whose address bar collapses.
+        '@supports (min-height: 100dvh)': { minHeight: '100dvh' },
+      }}
+    >
       <Sidebar
         items={navItems}
         footerItems={footerItems}
@@ -216,7 +231,6 @@ export function AppShell({
                 color="inherit"
                 edge="start"
                 aria-label={toggleLabel}
-                aria-expanded={!collapsed}
                 onClick={toggleCollapsed}
                 sx={{ display: { xs: 'none', [breakpoint]: 'inline-flex' } }}
               >

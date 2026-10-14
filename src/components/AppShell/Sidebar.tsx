@@ -50,8 +50,10 @@ export function Sidebar({
   onMobileClose,
   animate,
 }: SidebarProps) {
-  const active = findActiveIndex(items, currentPath, isActive);
-  const footerActive = findActiveIndex(footerItems ?? [], currentPath, isActive);
+  // One winner across both lists, so only one item is ever the current page.
+  const activeIndex = findActiveIndex([...items, ...(footerItems ?? [])], currentPath, isActive);
+  const active = activeIndex < items.length ? activeIndex : -1;
+  const footerActive = activeIndex >= items.length ? activeIndex - items.length : -1;
   const desktopWidth = collapsed ? miniWidth : width;
 
   const renderItem = (item: NavItem, isCurrent: boolean, mini: boolean) => (
@@ -62,7 +64,7 @@ export function Sidebar({
           {...(item.href ? { component: LinkComponent ?? 'a', href: item.href } : {})}
           onClick={() => {
             item.onClick?.();
-            onMobileClose();
+            if (mobileOpen) onMobileClose();
           }}
           aria-current={isCurrent ? 'page' : undefined}
           aria-label={mini ? item.label : undefined}
