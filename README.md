@@ -249,7 +249,7 @@ function ProjectsPage() {
 
 Without a provider the hooks read and write `window.location` through the history API, which suits apps without a router. Server HTML then renders the defaults, and the real query string is applied straight after hydration. With a router, pass its search params to `UrlStateProvider`, so the hooks and the router share one URL and server HTML matches it. The adapter is `{ search, replace }`: the current query string, and a function that replaces it without adding a history entry. Memoize it.
 
-Next.js App Router (wrap the provider in `<Suspense>`, as `useSearchParams` needs one on statically rendered routes):
+Next.js App Router (wrap the provider in `<Suspense>`, as `useSearchParams` needs one on statically rendered routes). Unlike the browser default, which keeps the `#hash`, `router.replace` drops it:
 
 ```tsx
 'use client';
@@ -263,9 +263,9 @@ export function NextUrlStateProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const adapter = useMemo<UrlAdapter>(
     () => ({
-      search: searchParams.toString(),
+      // Both hooks can return null under the Pages Router.
+      search: searchParams?.toString() ?? '',
       replace: (search) => {
-        // usePathname can be null under the Pages Router; fall back to the address bar.
         const path = pathname ?? window.location.pathname;
         router.replace(search ? `${path}?${search}` : path, { scroll: false });
       },

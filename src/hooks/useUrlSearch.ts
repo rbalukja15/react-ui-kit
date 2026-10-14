@@ -35,6 +35,8 @@ export function useUrlSearch(
   const unseen = React.useRef<string[]>([]);
   const commitRef = React.useRef(commit);
   commitRef.current = commit;
+  const urlValueRef = React.useRef(urlValue);
+  urlValueRef.current = urlValue;
 
   React.useEffect(() => {
     const next = settleEcho(unseen.current, urlValue);
@@ -44,7 +46,9 @@ export function useUrlSearch(
 
   const set = React.useCallback((value: string) => {
     setInput(value);
-    unseen.current.push(value);
+    // With nothing in flight, a value equal to the URL's never comes back as
+    // a change, so it is not waited for.
+    if (unseen.current.length > 0 || value !== urlValueRef.current) unseen.current.push(value);
     commitRef.current(value);
   }, []);
 

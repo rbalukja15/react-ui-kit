@@ -98,6 +98,16 @@ describe('useUrlSearch', () => {
     expect(result.current.input).toBe('');
   });
 
+  it('does not wait for a value equal to the URL, so Back to it is followed', () => {
+    const { router, Wrapper } = createLaggingRouter('q=cat');
+    const { result } = renderHook(useSearchPage, { wrapper: Wrapper });
+    for (const value of ['cat', 'ca', 'cab']) act(() => result.current.setInput(value));
+    // The router reports 'ca', then the user goes Back to 'cat' before 'cab' lands.
+    act(() => router.navigate('q=ca'));
+    act(() => router.navigate('q=cat'));
+    expect(result.current.input).toBe('cat');
+  });
+
   it('returns a stable setter that calls the latest commit', () => {
     const first = vi.fn();
     const second = vi.fn();

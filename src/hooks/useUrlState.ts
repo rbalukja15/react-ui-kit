@@ -119,6 +119,12 @@ export function useUrlState<T extends Record<string, UrlStateValue>>(
       const settled = settleWrites(pending.current, normalize(reported.current));
       const from = settled.writes[settled.writes.length - 1] ?? settled.base;
       const next = applyUrlPatch(defaults, new URLSearchParams(from), patch).toString();
+      // A write that changes nothing never comes back from the router, so
+      // recording it would leave it pending for good.
+      if (next === from) {
+        pending.current = settled;
+        return;
+      }
       pending.current = { base: settled.base, writes: [...settled.writes, next] };
       replace(next);
     },

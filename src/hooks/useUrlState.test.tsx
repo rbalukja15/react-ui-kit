@@ -176,6 +176,27 @@ describe('useUrlState with a provided adapter', () => {
     expect(router.writes[router.writes.length - 1]).toBe('q=dog&page=2');
   });
 
+  it('does not write, or wait for, a patch that leaves the URL as it is', () => {
+    const { router, Wrapper } = createLaggingRouter('q=dog');
+    const { result } = renderHook(() => useUrlState(DEFAULTS), { wrapper: Wrapper });
+    act(() => result.current[1]({ q: 'dog' }));
+    expect(router.writes).toEqual([]);
+    act(() => router.navigate('q=cat'));
+    act(() => result.current[1]({ page: 2 }));
+    expect(router.writes).toEqual(['q=cat&page=2']);
+  });
+
+  it('reads the adapter, not the address bar, under a provider', () => {
+    window.history.replaceState(null, '', '/list?q=bird');
+    const { Wrapper } = createLaggingRouter('q=cat');
+    const { result } = renderHook(() => useUrlState(DEFAULTS), { wrapper: Wrapper });
+    act(() => {
+      window.history.replaceState(null, '', '/list?q=fish');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    expect(result.current[0].q).toBe('cat');
+  });
+
   it('builds on an outside navigation once the router reports it', () => {
     const { router, Wrapper } = createLaggingRouter('q=dog');
     const { result } = renderHook(() => useUrlState(DEFAULTS), { wrapper: Wrapper });
