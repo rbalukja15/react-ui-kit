@@ -233,6 +233,9 @@ function toPickerLocaleText(localeText: DatePickerFieldLocaleText | undefined) {
 function useAppDayjsAdapter(): boolean {
   let context: unknown;
   try {
+    // Called on every render; the try only catches the missing-provider
+    // throw, as the comment above explains.
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     context = useLocalizationContext();
   } catch {
     return false;
