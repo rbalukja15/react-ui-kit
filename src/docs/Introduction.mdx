@@ -1,0 +1,23 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Introduction" />
+
+# @rbalukja15/ui-components
+
+A small, typed React component library built on MUI. It works with MUI 5, 6, 7 and 9 on React 18 or 19, and every component takes its data and callbacks through props, so nothing in it depends on a router, a store or an API client.
+
+## What is in this Storybook
+
+- **Docs** pages for each component, with a prop table generated from its TypeScript types.
+- **Controls** to change props live, and a **Mode** toggle in the toolbar for light and dark.
+- An **Accessibility** panel that runs axe on the story you are looking at.
+- An **Interactions** panel that replays the scripted tests attached to some stories. CI runs the same tests, plus an axe check of every story, in a real browser.
+
+## Principles
+
+- **No hidden coupling.** App-specific things such as links, labels and data loading come in through props.
+- **Controlled first.** Form fields work on their own. React Hook Form adapters are thin wrappers in a separate entry point.
+- **Accessible by default.** Roles, keyboard handling and focus management are part of each component and are tested.
+- **Typed strictly.** `strict` plus `noUncheckedIndexedAccess`, and every public prop type is exported.
+
+Source, changelog and issues are on [GitHub](https://github.com/rbalukja15/react-ui-kit).

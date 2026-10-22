@@ -1,5 +1,6 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import { expect, screen, userEvent, waitFor, within } from '@storybook/test';
 import { Stack } from '@mui/material';
 import { StatusChip, type StatusChipColor } from './StatusChip';
 
@@ -51,6 +52,20 @@ function Workflow({ withAction }: { withAction?: boolean }) {
 }
 
 export const Interactive: StoryObj<typeof StatusChip> = { render: () => <Workflow /> };
+
+/** Walks the status forward through the menu: Scheduled, Checked in, In progress. */
+export const MovesThroughStatuses: StoryObj<typeof StatusChip> = {
+  render: () => <Workflow />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: /Scheduled/ }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Checked in' }));
+    await userEvent.click(await canvas.findByRole('button', { name: /Checked in/ }));
+    await expect(await screen.findByRole('menuitem', { name: 'Cancelled' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('menuitem', { name: 'In progress' }));
+    await waitFor(() => expect(canvas.getByRole('button', { name: /In progress/ })).toBeVisible());
+  },
+};
 
 export const WithAction: StoryObj<typeof StatusChip> = { render: () => <Workflow withAction /> };
 
