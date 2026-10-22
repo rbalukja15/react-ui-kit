@@ -8,7 +8,7 @@ A small, deliberately-scoped React component library built on **MUI** (v5, v6, v
 
 > Extracted and generalised from the frontend of a production veterinary-practice app (Next.js 14, MUI 5, React Query, React Hook Form). The goal here is a clean, reusable subset — not a kitchen sink.
 
-**📖 [Live Storybook →](https://rbalukja15.github.io/react-ui-kit)**
+**📖 [Live Storybook →](https://rbalukja15.github.io/react-ui-kit)**: generated API docs for every component, live controls, a light and dark toggle, and an accessibility panel.
 
 ## Design language
 
@@ -359,10 +359,11 @@ export function RouterUrlStateProvider({ children }: { children: ReactNode }) {
 npm install
 npm run storybook     # component workbench at :6006
 npm run test          # vitest
+npm run build-storybook && npm run test-storybook:ci   # every story in Chromium, with an axe scan
 npm run build         # tsup -> ESM + CJS + .d.ts
 ```
 
-CI (lint, typecheck, test, build) runs on every push, plus a compatibility matrix that typechecks and tests against each supported MUI major and each supported `@mui/x-date-pickers` major, and an install check that packs the library and runs a plain `npm install` of it in a fresh app on each MUI major; Storybook deploys to GitHub Pages from `main`.
+CI (lint, typecheck, test, build) runs on every push, plus a compatibility matrix that typechecks and tests against each supported MUI major and each supported `@mui/x-date-pickers` major, and an install check that packs the library and runs a plain `npm install` of it in a fresh app on each MUI major, and a browser run of every story that replays its interaction test and scans it with axe; Storybook deploys to GitHub Pages from `main`.
 
 ### Releasing
 

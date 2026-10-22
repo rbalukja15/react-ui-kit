@@ -29,11 +29,27 @@ describe.each(modes)('%s palette contrast', (mode) => {
     expect(getContrastRatio(fg, background.paper)).toBeGreaterThanOrEqual(AA_TEXT);
   });
 
+  // A chip sits on the page as often as on a card, and its hover and focus
+  // tint is stronger than its resting one.
   it.each(semanticColors)('tonal %s chip text meets AA on its tint', (key) => {
     const palette = theme.palette[key];
-    const tint = over(alpha(palette.main, mode === 'light' ? 0.12 : 0.22), background.paper);
     const fg = mode === 'light' ? palette.dark : palette.light;
-    expect(getContrastRatio(fg, tint)).toBeGreaterThanOrEqual(AA_TEXT);
+    const alphas = mode === 'light' ? [0.12, 0.2] : [0.22, 0.32];
+    for (const surface of [background.default, background.paper]) {
+      for (const tintAlpha of alphas) {
+        expect(getContrastRatio(fg, over(alpha(palette.main, tintAlpha), surface))).toBeGreaterThanOrEqual(AA_TEXT);
+      }
+    }
+  });
+
+  it('empty outlined field label meets AA', () => {
+    const label = createAppTheme(mode).components?.MuiInputLabel?.styleOverrides?.root as (props: {
+      theme: typeof theme;
+    }) => Record<string, { color?: string }>;
+    const color = label({ theme })['&.MuiInputLabel-outlined:not(.MuiInputLabel-shrink)']?.color;
+    expect(color).toBeDefined();
+    expect(getContrastRatio(color!, background.default)).toBeGreaterThanOrEqual(AA_TEXT);
+    expect(getContrastRatio(color!, background.paper)).toBeGreaterThanOrEqual(AA_TEXT);
   });
 
   it('tooltip text meets AA', () => {

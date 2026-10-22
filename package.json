@@ -1,7 +1,7 @@
 {
   "name": "@rbalukja15/ui-components",
   "version": "0.2.0",
-  "description": "A small, well-typed React component library built on MUI — accessible, themeable, and decoupled from any app.",
+  "description": "A small, well-typed React component library built on MUI \u2014 accessible, themeable, and decoupled from any app.",
   "license": "MIT",
   "author": "Romarjo Balukja",
   "repository": {
@@ -100,6 +100,8 @@
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "test-storybook": "test-storybook",
+    "test-storybook:ci": "concurrently -k -s first -n SB,TEST \"http-server storybook-static --port 6006 --silent\" \"wait-on tcp:127.0.0.1:6006 && test-storybook --url http://127.0.0.1:6006\"",
     "prepare": "npm run build",
     "changeset": "changeset",
     "release": "changeset publish"
@@ -128,7 +130,13 @@
     "@mui/icons-material": "^5.15.10",
     "@mui/material": "^5.18.0",
     "@mui/x-date-pickers": "^8.29.4",
+    "@storybook/addon-a11y": "^8.6.18",
+    "@storybook/addon-essentials": "^8.6.18",
+    "@storybook/addon-interactions": "^8.6.18",
+    "@storybook/blocks": "^8.6.18",
     "@storybook/react-vite": "^8.6.0",
+    "@storybook/test": "^8.6.18",
+    "@storybook/test-runner": "^0.22.1",
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^16.0.0",
     "@types/react": "^18.3.31",
@@ -137,8 +145,11 @@
     "@typescript-eslint/parser": "^6.21.0",
     "@vitejs/plugin-react": "^4.3.0",
     "@vitest/coverage-v8": "^2.1.0",
+    "axe-playwright": "^2.2.2",
+    "concurrently": "^10.0.6",
     "dayjs": "^1.11.23",
     "eslint": "^8.57.0",
+    "http-server": "^14.1.1",
     "jsdom": "^25.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -147,6 +158,7 @@
     "tsup": "^8.3.0",
     "typescript": "5.5",
     "vitest": "^2.1.0",
-    "vitest-axe": "^0.1.0"
+    "vitest-axe": "^0.1.0",
+    "wait-on": "^9.5.1"
   }
 }
