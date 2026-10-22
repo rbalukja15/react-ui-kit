@@ -9,6 +9,7 @@ import {
   Menu,
   MenuItem,
   Skeleton,
+  SvgIcon,
   Table,
   TableBody,
   TableCell,
@@ -179,11 +180,38 @@ function columnName<Row>(column: DataTableColumn<Row>): string {
  * A checkbox named by a visually hidden `<label>`. `id` reaches the input on
  * every supported MUI major, while the input's own props moved from
  * `inputProps` (MUI 5 and 6) to `slotProps.input` (MUI 9).
+ *
+ * `mixed` draws the indeterminate icon and sets the input's native
+ * `indeterminate` state, which is what assistive technology reads. MUI's own
+ * `indeterminate` prop also writes `aria-checked="mixed"` on some majors,
+ * which is not allowed on a native checkbox.
  */
-function LabelledCheckbox({ id, label, ...props }: { id: string; label: string } & Omit<CheckboxProps, 'id'>) {
+function LabelledCheckbox({
+  id,
+  label,
+  mixed = false,
+  sx,
+  ...props
+}: { id: string; label: string; mixed?: boolean } & Omit<CheckboxProps, 'id' | 'indeterminate'>) {
+  React.useEffect(() => {
+    const input = document.getElementById(id);
+    if (input instanceof HTMLInputElement) input.indeterminate = mixed;
+  }, [id, mixed]);
   return (
     <>
-      <Checkbox id={id} {...props} />
+      <Checkbox
+        id={id}
+        {...props}
+        {...(mixed && {
+          checked: false,
+          icon: (
+            <SvgIcon>
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z" />
+            </SvgIcon>
+          ),
+        })}
+        sx={[mixed && !props.disabled ? { color: 'primary.main' } : {}, ...(Array.isArray(sx) ? sx : [sx])]}
+      />
       <Box component="label" htmlFor={id} sx={visuallyHidden}>
         {label}
       </Box>
@@ -388,7 +416,7 @@ export function DataTable<Row>({
                     id={`${idPrefix}-all`}
                     label={labels.selectAll}
                     checked={pageIds.length > 0 && selectedOnPage === pageIds.length}
-                    indeterminate={selectedOnPage > 0 && selectedOnPage < pageIds.length}
+                    mixed={selectedOnPage > 0 && selectedOnPage < pageIds.length}
                     disabled={loading || pageIds.length === 0}
                     onChange={togglePage}
                   />
