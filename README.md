@@ -372,6 +372,10 @@ Versions and the [changelog](./CHANGELOG.md) are managed with [Changesets](https
 2. When that PR lands on `main`, the Release workflow opens a "chore: release" PR that bumps the version and updates `CHANGELOG.md`.
 3. Merging the release PR publishes the new version to npm with provenance. Publishing uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers), so no npm token is stored in the repo.
 
+## Contributing and decisions
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup and conventions. The reasoning behind the less obvious choices (the MUI support range, why MUI X is not a peer, the `'use client'` banner, router-agnostic hooks) is in the [architecture decision records](./docs/adr/README.md).
+
 ## Porting guide
 
 A form control follows the pattern in [Forms](#forms): the controlled component goes in its folder's `index.ts` and the main entry, and its `*.rhf.tsx` adapter is exported only from a subpath entry, so the main entry never imports an optional peer.
