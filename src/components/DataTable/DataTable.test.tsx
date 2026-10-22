@@ -141,13 +141,15 @@ describe('<DataTable>', () => {
 
     await user.click(within(table).getByRole('checkbox', { name: 'Select Ada' }));
     expect(onSelectionChange).toHaveBeenLastCalledWith([1]);
-    expect(all).toHaveAttribute('data-indeterminate', 'true');
+    expect((all as HTMLInputElement).indeterminate).toBe(true);
+    expect(all).not.toBeChecked();
     expect(screen.getByRole('status')).toHaveTextContent('1 selected');
 
     await user.click(screen.getByRole('button', { name: 'Go to next page' }));
     await user.click(all);
     expect(onSelectionChange).toHaveBeenLastCalledWith([1, 3, 4]);
     expect(all).toBeChecked();
+    expect((all as HTMLInputElement).indeterminate).toBe(false);
     await user.click(all);
     expect(onSelectionChange).toHaveBeenLastCalledWith([1]);
   });
