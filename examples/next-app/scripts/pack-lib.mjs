@@ -2,7 +2,7 @@
 // vendor/, so the demo installs exactly what users get: the built dist/, the
 // exports map and the 'use client' banners, not the source.
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, renameSync, rmSync } from 'node:fs';
+import { mkdirSync, readdirSync, renameSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -12,9 +12,12 @@ const vendor = join(here, '..', 'vendor');
 
 rmSync(vendor, { recursive: true, force: true });
 mkdirSync(vendor);
-// `npm pack` runs the library's `prepare` script, which builds it.
-const output = execFileSync('npm', ['pack', '--json', '--pack-destination', vendor], { cwd: root, encoding: 'utf8' });
-const [{ filename }] = JSON.parse(output.slice(output.indexOf('[')));
+// `npm pack` runs the library's `prepare` script, which builds it. Its build
+// log shares stdout with npm's own output, so read the tarball name from
+// vendor/ (empty until now) rather than parsing that output.
+execFileSync('npm', ['pack', '--pack-destination', vendor], { cwd: root, stdio: 'inherit' });
+const [filename] = readdirSync(vendor).filter((name) => name.endsWith('.tgz'));
+if (!filename) throw new Error('npm pack did not write a tarball');
 renameSync(join(vendor, filename), join(vendor, 'ui-components.tgz'));
 // npm keeps an installed file: dependency whose path did not change, so drop
 // it to make the next `npm install` unpack the new tarball.
