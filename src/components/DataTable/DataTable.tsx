@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Checkbox,
+  type CheckboxProps,
   ListItemIcon,
   ListItemText,
   Menu,
@@ -174,6 +175,22 @@ function columnName<Row>(column: DataTableColumn<Row>): string {
   return column.menuLabel ?? (typeof column.header === 'string' ? column.header : column.id);
 }
 
+/**
+ * A checkbox named by a visually hidden `<label>`. `id` reaches the input on
+ * every supported MUI major, while the input's own props moved from
+ * `inputProps` (MUI 5 and 6) to `slotProps.input` (MUI 9).
+ */
+function LabelledCheckbox({ id, label, ...props }: { id: string; label: string } & Omit<CheckboxProps, 'id'>) {
+  return (
+    <>
+      <Checkbox id={id} {...props} />
+      <Box component="label" htmlFor={id} sx={visuallyHidden}>
+        {label}
+      </Box>
+    </>
+  );
+}
+
 function CheckIcon({ checked }: { checked: boolean }) {
   return (
     <svg aria-hidden="true" focusable="false" width="1.25em" height="1.25em" viewBox="0 0 24 24" fill="currentColor">
@@ -300,6 +317,7 @@ export function DataTable<Row>({
 
   const [menuAnchor, setMenuAnchor] = React.useState<HTMLElement | null>(null);
   const menuId = React.useId();
+  const idPrefix = React.useId();
   const toggleColumn = (id: string) => {
     setHidden(hidden.includes(id) ? hidden.filter((h) => h !== id) : [...hidden, id]);
   };
@@ -366,12 +384,13 @@ export function DataTable<Row>({
             <TableRow>
               {selectable && (
                 <TableCell padding="checkbox">
-                  <Checkbox
+                  <LabelledCheckbox
+                    id={`${idPrefix}-all`}
+                    label={labels.selectAll}
                     checked={pageIds.length > 0 && selectedOnPage === pageIds.length}
                     indeterminate={selectedOnPage > 0 && selectedOnPage < pageIds.length}
                     disabled={loading || pageIds.length === 0}
                     onChange={togglePage}
-                    inputProps={{ 'aria-label': labels.selectAll }}
                   />
                 </TableCell>
               )}
@@ -427,17 +446,18 @@ export function DataTable<Row>({
                 </TableCell>
               </TableRow>
             ) : (
-              pageRows.map((row) => {
+              pageRows.map((row, index) => {
                 const id = getRowId(row);
                 const isSelected = selectedSet.has(id);
                 return (
                   <TableRow key={id} hover selected={isSelected}>
                     {selectable && (
                       <TableCell padding="checkbox">
-                        <Checkbox
+                        <LabelledCheckbox
+                          id={`${idPrefix}-row-${index}`}
+                          label={labels.selectRow(getRowLabel ? getRowLabel(row) : String(id))}
                           checked={isSelected}
                           onChange={() => toggleRow(id)}
-                          inputProps={{ 'aria-label': labels.selectRow(getRowLabel ? getRowLabel(row) : String(id)) }}
                         />
                       </TableCell>
                     )}
