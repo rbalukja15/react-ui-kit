@@ -1,0 +1,36 @@
+name: Chromatic
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # Publishes Storybook to Chromatic and snapshots every story in light and
+  # dark mode. Changed snapshots go to review on the pull request instead of
+  # failing the build; main is auto-accepted as the new baseline.
+  visual:
+    runs-on: ubuntu-latest
+    env:
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # TurboSnap needs the history to work out which stories changed.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # Forks and repos without the secret skip the upload rather than fail.
+      - if: env.CHROMATIC_PROJECT_TOKEN != ''
+        uses: chromaui/action@latest
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          buildScriptName: build-storybook
+          onlyChanged: true
+          exitZeroOnChanges: true
+          autoAcceptChanges: main
+      - if: env.CHROMATIC_PROJECT_TOKEN == ''
+        run: echo "::notice::CHROMATIC_PROJECT_TOKEN is not set, so visual tests were skipped."

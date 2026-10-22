@@ -364,6 +364,10 @@ npm run build         # tsup -> ESM + CJS + .d.ts
 
 CI (lint, typecheck, test, build) runs on every push, plus a compatibility matrix that typechecks and tests against each supported MUI major and each supported `@mui/x-date-pickers` major, and an install check that packs the library and runs a plain `npm install` of it in a fresh app on each MUI major; Storybook deploys to GitHub Pages from `main`.
 
+### Visual tests
+
+[Chromatic](https://www.chromatic.com/) snapshots every story in light and dark mode on each pull request. Changed snapshots are flagged for review on the pull request rather than failing it, and merges to `main` become the new baseline. TurboSnap only re-captures stories whose source changed.
+
 ### Releasing
 
 Versions and the [changelog](./CHANGELOG.md) are managed with [Changesets](https://github.com/changesets/changesets).

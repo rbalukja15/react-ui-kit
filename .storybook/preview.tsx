@@ -35,6 +35,14 @@ const preview: Preview = {
   parameters: {
     controls: { expanded: true },
     backgrounds: { disable: true },
+    // Chromatic snapshots every story once per mode, so a theme change in
+    // either palette shows up as a visual diff on the pull request.
+    chromatic: {
+      modes: {
+        light: { mode: 'light' },
+        dark: { mode: 'dark' },
+      },
+    },
   },
 };
 
