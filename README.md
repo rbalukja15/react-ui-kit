@@ -11,6 +11,8 @@ A small, deliberately-scoped React component library built on **MUI** (v5, v6, v
 
 **📖 [Live Storybook →](https://rbalukja15.github.io/react-ui-kit)**: generated API docs for every component, live controls, a light and dark toggle, and an accessibility panel.
 
+**🧾 [Demo app →](https://rbalukja15.github.io/react-ui-kit/demo/)** (an order-management screen on Next.js 16, MUI 9 and React 19, [source](./examples/next-app))
+
 ## Design language
 
 Warm editorial surfaces (cream paper, soft warm hairlines) on a teal brand axis. Headings render in **Newsreader** serif for an editorial display; body and labels stay **Inter** sans. Both light and a muted dark mode ship out of the box; semantic colours (success / warning / error / info) flip per mode to stay readable without glare.
