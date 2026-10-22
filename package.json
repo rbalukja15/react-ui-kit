@@ -1,7 +1,7 @@
 {
   "name": "@rbalukja15/ui-components",
   "version": "0.2.0",
-  "description": "A small, well-typed React component library built on MUI — accessible, themeable, and decoupled from any app.",
+  "description": "A small, well-typed React component library built on MUI \u2014 accessible, themeable, and decoupled from any app.",
   "license": "MIT",
   "author": "Romarjo Balukja",
   "repository": {
@@ -93,11 +93,13 @@
   },
   "scripts": {
     "build": "tsup",
+    "size": "size-limit",
     "dev": "tsup --watch",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "prepare": "npm run build",
@@ -128,6 +130,7 @@
     "@mui/icons-material": "^5.15.10",
     "@mui/material": "^5.18.0",
     "@mui/x-date-pickers": "^8.29.4",
+    "@size-limit/preset-small-lib": "^11.2.0",
     "@storybook/react-vite": "^8.6.0",
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^16.0.0",
@@ -143,6 +146,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.89.0",
+    "size-limit": "^11.2.0",
     "storybook": "^8.6.0",
     "tsup": "^8.3.0",
     "typescript": "5.5",
