@@ -186,11 +186,38 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
 
-  # Deploys Storybook to GitHub Pages on push to main.
+  # Builds the Next.js demo in examples/next-app against the packed library,
+  # the way an app would install it. The static export prerenders every page
+  # on the server, so this also proves the App Router integration end to end.
+  demo:
+    name: demo (Next.js 16, MUI 9, React 19)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Pack the library and install the demo
+        working-directory: examples/next-app
+        run: npm run setup
+      - name: Build the demo
+        working-directory: examples/next-app
+        run: npm run build
+        env:
+          DEMO_BASE_PATH: /react-ui-kit/demo
+          NEXT_TELEMETRY_DISABLED: 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo
+          path: examples/next-app/out
+
+  # Deploys Storybook to GitHub Pages on push to main, with the demo at /demo/.
   # Enable Pages in repo Settings > Pages > Source: GitHub Actions.
   storybook:
     if: github.ref == 'refs/heads/main'
-    needs: verify
+    needs: [verify, demo]
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -206,6 +233,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build-storybook
+      - uses: actions/download-artifact@v4
+        with:
+          name: demo
+          path: storybook-static/demo
       - uses: actions/upload-pages-artifact@v3
         with:
           path: storybook-static

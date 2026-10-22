@@ -8,7 +8,7 @@ A small, deliberately-scoped React component library built on **MUI** (v5, v6, v
 
 > Extracted and generalised from the frontend of a production veterinary-practice app (Next.js 14, MUI 5, React Query, React Hook Form). The goal here is a clean, reusable subset — not a kitchen sink.
 
-**📖 [Live Storybook →](https://rbalukja15.github.io/react-ui-kit)**
+**📖 [Live Storybook →](https://rbalukja15.github.io/react-ui-kit)** · **🧾 [Demo app →](https://rbalukja15.github.io/react-ui-kit/demo/)** (an order-management screen on Next.js 16, MUI 9 and React 19, [source](./examples/next-app))
 
 ## Design language
 
