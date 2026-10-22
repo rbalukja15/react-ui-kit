@@ -63,7 +63,12 @@ export const MovesThroughStatuses: StoryObj<typeof StatusChip> = {
     await userEvent.click(await canvas.findByRole('button', { name: /Checked in/ }));
     await expect(await screen.findByRole('menuitem', { name: 'Cancelled' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('menuitem', { name: 'In progress' }));
-    await waitFor(() => expect(canvas.getByRole('button', { name: /In progress/ })).toBeVisible());
+    const chip = canvas.getByRole('button', { name: /In progress/ });
+    await waitFor(() => expect(chip).toBeVisible());
+    // Leave the chip so its "Change status" tooltip is gone before the axe
+    // scan, rather than caught half faded in.
+    await userEvent.unhover(chip);
+    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument());
   },
 };
 
