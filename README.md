@@ -128,6 +128,7 @@ The stored choice and the OS setting are only read in the browser. Server HTML r
 | `BottomNav` | Fixed mobile bottom navigation bar | Used by `AppShell`, also usable alone; link is injectable |
 | `Breadcrumbs` | Breadcrumb trail for detail-page headers | Link is injectable; last crumb gets `aria-current="page"` |
 | `ConfirmDialog` | Promise-based `confirm()` replacement via context + `useConfirm()` hook | Labels are props (no i18n dependency) |
+| `DataTable` | Table with sorting, pagination, row selection, a columns menu and row actions | Client or server mode; every piece of state can be controlled, e.g. kept in the URL. See [Data table](#data-table) |
 | `DatePickerField` | Date input with a popover calendar; the value is an ISO `YYYY-MM-DD` string | From `/date-picker` (needs `@mui/x-date-pickers` and `dayjs`); RHF adapter from `/date-picker/rhf`. See [Forms](#forms) |
 | `DatePresets` | Quick-pick chips such as "+1 month / +3 months / +1 year" next to a date field | Counts from a base date read at click time, or today; returns an ISO `YYYY-MM-DD` string. No date library needed |
 | `EmptyState` | Empty-list placeholder with tinted icon tile + optional CTA | Link is injectable — works with Next, react-router, or `<a>` |
@@ -143,6 +144,50 @@ The stored choice and the OS setting are only read in the browser. Server HTML r
 | `useDebouncedValue` | Debounce any value | — |
 | `useUrlState` | Typed state kept in the URL query string | Router is injectable; see [URL state](#url-state) |
 | `useUrlSearch` | Search box synced to the URL without lost keystrokes | Debounced query for fetching; see [URL state](#url-state) |
+
+## Data table
+
+`DataTable` takes rows, column definitions and a row id, and handles sorting, pagination, selection, column visibility, loading and empty states:
+
+```tsx
+import { DataTable, type DataTableColumn } from '@rbalukja15/ui-components';
+
+const columns: DataTableColumn<Order>[] = [
+  { id: 'id', header: 'Order', sortable: true, hideable: false },
+  { id: 'customer', header: 'Customer', sortable: true },
+  { id: 'total', header: 'Total', sortable: true, align: 'right', cell: (o) => money.format(o.total) },
+];
+
+<DataTable
+  label="Orders"
+  rows={orders}
+  columns={columns}
+  getRowId={(o) => o.id}
+  selectable
+  columnsMenu
+  rowActions={(o) => <IconButton aria-label={`Edit ${o.id}`}>…</IconButton>}
+/>;
+```
+
+By default it sorts and pages `rows` itself. Strings sort by locale with numbers read as numbers, and empty values go last. With `mode="server"` it shows the rows it is given and reports changes instead, so your API does the work:
+
+```tsx
+<DataTable
+  mode="server"
+  rows={data.rows}
+  rowCount={data.total}
+  loading={isFetching}
+  sort={sort}
+  onSortChange={setSort}
+  page={page}
+  onPageChange={setPage}
+  pageSize={pageSize}
+  onPageSizeChange={setPageSize}
+  {...rest}
+/>
+```
+
+Sort, page, page size, selection and hidden columns each work uncontrolled (with a `default…` prop) or controlled (the prop plus its `on…Change`), so any of them can live in the URL through `useUrlState`. Headers are `<th>` cells with `aria-sort`, sort controls are buttons, checkboxes are named after the row (`getRowLabel`), and every string is in `labels` for translation.
 
 ## Forms
 
@@ -374,8 +419,9 @@ Peers stay external and the package is marked side-effect free, so an app pays o
 
 | Import | Budget |
 | --- | --- |
-| Everything from the main entry | 11.5 kB |
+| Everything from the main entry | 14 kB |
 | `{ EmptyState }` alone | 1 kB |
+| `{ DataTable }` alone | 4 kB |
 | `{ createAppTheme }` alone | 2.5 kB |
 | Everything from `/rhf` | 2.5 kB |
 | Everything from `/date-picker` or `/date-picker/rhf` (MUI X not counted) | 1.5 kB |

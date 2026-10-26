@@ -2,6 +2,7 @@
 export * from './components/AppShell';
 export * from './components/Breadcrumbs';
 export * from './components/ConfirmDialog';
+export * from './components/DataTable';
 export * from './components/DatePresets';
 export * from './components/EmptyState';
 export * from './components/FloatingCreateButton';

@@ -1,6 +1,7 @@
 [
-  { "name": "Main entry, everything", "path": "dist/index.js", "import": "*", "limit": "11.5 kB" },
+  { "name": "Main entry, everything", "path": "dist/index.js", "import": "*", "limit": "14 kB" },
   { "name": "One component (EmptyState)", "path": "dist/index.js", "import": "{ EmptyState }", "limit": "1 kB" },
+  { "name": "One component (DataTable)", "path": "dist/index.js", "import": "{ DataTable }", "limit": "4 kB" },
   { "name": "Theme only (createAppTheme)", "path": "dist/index.js", "import": "{ createAppTheme }", "limit": "2.5 kB" },
   { "name": "/rhf, everything", "path": "dist/rhf.js", "import": "*", "limit": "2.5 kB" },
   { "name": "/date-picker, everything", "path": "dist/date-picker.js", "import": "*", "limit": "1.5 kB", "ignore": ["@mui/x-date-pickers"] },
