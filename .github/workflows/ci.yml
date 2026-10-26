@@ -17,8 +17,19 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm run test
+      - run: npm run coverage
+      # The Pages job publishes this exact report, so the numbers on the site
+      # are the ones that passed the thresholds.
+      - if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage
       - run: npm run build
+      # Fails if an entry outgrows its budget in .size-limit.json, measured
+      # minified and brotlied with the peers left out. The single-import rows
+      # check that tree-shaking still works.
+      - run: npm run size
       # Every emitted file, entries and shared chunks, must open with the
       # directive itself: a later line, or the same line after generated
       # code, is not a directive and Next.js ignores it.
@@ -246,6 +257,12 @@ jobs:
         with:
           name: storybook-static
           path: storybook-static
+      # The coverage report from verify is published next to Storybook, and
+      # its summary JSON feeds the README badge.
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: storybook-static/coverage
       - uses: actions/upload-pages-artifact@v3
         with:
           path: storybook-static
