@@ -13,4 +13,4 @@ Add `'use client';` as a banner on every emitted JS file, entries and shared chu
 
 ## Consequences
 
-Components and providers can be imported straight into server components such as `app/layout.tsx`. Plain functions exported alongside them (`titleCase`, `createAppTheme`) become client functions too, which the README calls out. CJS subpath entries repeat the components they import, so a module shared between entries must not hold module-level state. A CI step fails the build if any output file does not start with the directive.
+Components and providers can be imported straight into server components such as `app/layout.tsx`. Plain functions exported alongside them (`titleCase`, `createAppTheme`) become client functions too, which the README calls out. CJS subpath entries repeat the components they import, so a module shared between entries must not hold module-level state. A step in the CI `verify` job ("Check every bundle file keeps its 'use client' directive") fails the build if any output file does not start with the directive.

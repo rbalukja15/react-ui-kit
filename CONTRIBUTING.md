@@ -4,7 +4,7 @@ Thanks for taking the time to help. This guide covers setup, the conventions the
 
 ## Setup
 
-Node 20 or later.
+Node 22 (see `.nvmrc`). ESLint 10 needs at least 20.19, and CI runs 22.
 
 ```bash
 npm install
@@ -14,11 +14,13 @@ npm run test:watch         # vitest in watch mode
 
 | Script | What it does |
 | --- | --- |
-| `npm run lint` | ESLint over `src/` |
+| `npm run lint` | ESLint over `src/`, stories and tests included. Warnings fail it too (`--max-warnings 0`), so a missing hook dependency blocks CI |
 | `npm run typecheck` | `tsc --noEmit` with `strict` and `noUncheckedIndexedAccess` |
 | `npm run test` | Unit, interaction and axe tests in jsdom |
 | `npm run build` | ESM, CJS and type declarations for every entry, via tsup |
 | `npm run build-storybook` | Static Storybook in `storybook-static/` |
+| `npm run coverage` | Tests with a coverage report and the minimum thresholds (once the size and coverage checks land) |
+| `npm run size` | Builds and checks each entry against its bundle-size budget (same) |
 | `npm run changeset` | Describe a user-facing change for the changelog |
 
 ## Adding a component
@@ -48,8 +50,8 @@ Things reviewers check for:
 
 - Branch from `main` with a `feat/`, `fix/` or `chore/` prefix.
 - Use [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `chore:`, `docs:`, `test:`.
-- Run `npm run changeset` for anything a user of the package would notice, and pick patch, minor or major. Internal changes such as CI, tests and docs need none.
-- CI must be green: lint, typecheck, tests, build and the bundle checks, the MUI compatibility matrix, and the install check on each MUI major.
+- Run `npm run changeset` for anything a user of the package would notice, and pick patch, minor or major. Internal changes such as CI, tests and docs need none. [`.changeset/README.md`](./.changeset/README.md) explains the format.
+- CI must be green: the `verify` job (lint, typecheck, tests, build and the bundle checks), the `compat` matrix, and the `install` check on each MUI major.
 
 ## Decisions
 

@@ -22,4 +22,4 @@ The main entry imports only React, MUI and Emotion. Code that needs an optional 
 
 ## Consequences
 
-CI enforces the boundary: one step follows every relative import from the main entry, declaration files included, and fails if it reaches an optional peer. Another checks that each stub matches the `exports` map. A new component that needs an optional dependency gets a subpath, not a conditional import.
+CI enforces the boundary in the `verify` job: one step ("Check the main entry does not import the optional peers") follows every relative import from the main entry, declaration files included, and fails if it reaches an optional peer. Another ("Check the subpath stubs match the exports map") checks that each stub matches the `exports` map. A new component that needs an optional dependency gets a subpath, not a conditional import.
