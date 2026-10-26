@@ -5,6 +5,14 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+# A new push to the same branch cancels the build it replaces.
+concurrency:
+  group: chromatic-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # Publishes Storybook to Chromatic and snapshots every story in light and
   # dark mode. Changed snapshots go to review on the pull request instead of
@@ -14,18 +22,18 @@ jobs:
     env:
       CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           # TurboSnap needs the history to work out which stories changed.
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
       # Forks and repos without the secret skip the upload rather than fail.
       - if: env.CHROMATIC_PROJECT_TOKEN != ''
-        uses: chromaui/action@latest
+        uses: chromaui/action@v18
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           buildScriptName: build-storybook
