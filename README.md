@@ -2,6 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/@rbalukja15/ui-components)](https://www.npmjs.com/package/@rbalukja15/ui-components)
 [![CI](https://github.com/rbalukja15/react-ui-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/rbalukja15/react-ui-kit/actions/workflows/ci.yml)
+[![coverage](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Frbalukja15.github.io%2Freact-ui-kit%2Fcoverage%2Fcoverage-summary.json&query=%24.total.lines.pct&suffix=%25&label=coverage&color=brightgreen)](https://rbalukja15.github.io/react-ui-kit/coverage/)
 [![license](https://img.shields.io/npm/l/@rbalukja15/ui-components)](./LICENSE)
 
 A small, deliberately-scoped React component library built on **MUI** (v5, v6, v7 and v9, on React 18 or 19). Accessible, fully typed, themeable, and decoupled from any single app — every component takes data and callbacks via props rather than reaching into a router, store, or API client.
@@ -359,11 +360,27 @@ export function RouterUrlStateProvider({ children }: { children: ReactNode }) {
 npm install
 npm run storybook     # component workbench at :6006
 npm run test          # vitest
+npm run coverage      # vitest with coverage; fails below 95% lines
+npm run size          # bundle size per entry against .size-limit.json (after npm run build)
 npm run build-storybook && npm run test-storybook:ci   # every story in Chromium, with an axe scan (STORYBOOK_MODE=dark for the dark palette)
 npm run build         # tsup -> ESM + CJS + .d.ts
 ```
 
 CI (lint, typecheck, test, build) runs on every push, plus a compatibility matrix that typechecks and tests against each supported MUI major and each supported `@mui/x-date-pickers` major, and an install check that packs the library and runs a plain `npm install` of it in a fresh app on each MUI major, and a browser run of every story, in light and in dark mode, that replays its interaction test and scans it with axe; Storybook deploys to GitHub Pages from `main`.
+
+### Size and coverage
+
+Peers stay external and the package is marked side-effect free, so an app pays only for what it imports. CI measures each entry with [size-limit](https://github.com/ai/size-limit), minified and brotlied with the peers left out, and fails when one outgrows its budget:
+
+| Import | Budget |
+| --- | --- |
+| Everything from the main entry | 11.5 kB |
+| `{ EmptyState }` alone | 1 kB |
+| `{ createAppTheme }` alone | 2.5 kB |
+| Everything from `/rhf` | 2.5 kB |
+| Everything from `/date-picker` or `/date-picker/rhf` (MUI X not counted) | 1.5 kB |
+
+Coverage has a floor of 95% for lines, statements and functions and 90% for branches. The full [coverage report](https://rbalukja15.github.io/react-ui-kit/coverage/) is published with Storybook.
 
 ### Releasing
 

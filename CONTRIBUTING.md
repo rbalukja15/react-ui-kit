@@ -19,8 +19,8 @@ npm run test:watch         # vitest in watch mode
 | `npm run test` | Unit, interaction and axe tests in jsdom |
 | `npm run build` | ESM, CJS and type declarations for every entry, via tsup |
 | `npm run build-storybook` | Static Storybook in `storybook-static/` |
-| `npm run coverage` | Tests with a coverage report and the minimum thresholds (once the size and coverage checks land) |
-| `npm run size` | Builds and checks each entry against its bundle-size budget (same) |
+| `npm run coverage` | Tests with a coverage report and the minimum thresholds |
+| `npm run size` | Checks each built entry against its bundle-size budget (run `npm run build` first) |
 | `npm run changeset` | Describe a user-facing change for the changelog |
 
 ## Adding a component
