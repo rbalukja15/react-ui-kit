@@ -1,0 +1,33 @@
+version: 2
+updates:
+  # Dev tooling and the peers used in tests. Minor and patch updates arrive
+  # as one grouped pull request a week; majors come one at a time, since
+  # they may need code or matrix changes.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    # Peer ranges are widened by hand, with a compat matrix row first
+    # (docs/adr/0002). Bumping the dev copies of the peers would only move
+    # the version the main test run uses.
+    ignore:
+      - dependency-name: '@mui/*'
+        update-types: [version-update:semver-major]
+      - dependency-name: 'react'
+        update-types: [version-update:semver-major]
+      - dependency-name: 'react-dom'
+        update-types: [version-update:semver-major]
+      - dependency-name: '@types/react*'
+        update-types: [version-update:semver-major]
+    commit-message:
+      prefix: chore
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
