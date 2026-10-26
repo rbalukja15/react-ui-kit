@@ -202,15 +202,17 @@ function LabelledCheckbox({
   sx,
   ...props
 }: { id: string; label: string; mixed?: boolean } & Omit<CheckboxProps, 'id' | 'indeterminate'>) {
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  // The root, not the input: MUI 9 dropped `inputRef`.
+  const rootRef = React.useRef<HTMLButtonElement>(null);
   React.useEffect(() => {
-    if (inputRef.current) inputRef.current.indeterminate = mixed;
+    const input = rootRef.current?.querySelector('input');
+    if (input) input.indeterminate = mixed;
   }, [mixed]);
   return (
     <>
       <Checkbox
         id={id}
-        inputRef={inputRef}
+        ref={rootRef}
         {...props}
         {...(mixed && {
           checked: false,
