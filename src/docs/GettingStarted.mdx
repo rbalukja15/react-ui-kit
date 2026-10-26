@@ -1,0 +1,63 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Getting started" />
+
+# Getting started
+
+## Install
+
+```bash
+npm install @rbalukja15/ui-components @mui/material @emotion/react @emotion/styled
+```
+
+`react` and `react-dom` 18 or 19 are peers too. The form entry points need more peers, but only when you use them:
+
+| Entry | Exports | Extra peers |
+| --- | --- | --- |
+| `@rbalukja15/ui-components` | Components, theme and hooks | None |
+| `@rbalukja15/ui-components/rhf` | React Hook Form adapters | `react-hook-form` |
+| `@rbalukja15/ui-components/date-picker` | `DatePickerField` | `@mui/x-date-pickers`, `dayjs` |
+| `@rbalukja15/ui-components/date-picker/rhf` | `RhfDatePickerField` | All three |
+
+## Set up the theme
+
+Wrap the app once. `ThemeModeProvider` applies the theme and `CssBaseline`, and handles light, dark and system mode.
+
+```tsx
+import { ThemeModeProvider, ConfirmDialogProvider } from '@rbalukja15/ui-components';
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <ThemeModeProvider defaultMode="system" storageKey="my-app:theme-mode">
+      <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
+    </ThemeModeProvider>
+  );
+}
+```
+
+The theme uses Newsreader for headings and Inter for body text. Load both from Google Fonts in your HTML head.
+
+## Use a component
+
+```tsx
+import { EmptyState } from '@rbalukja15/ui-components';
+
+<EmptyState
+  title="No projects yet"
+  description="Create your first project to get started."
+  actionLabel="New project"
+  onAction={openCreateDialog}
+/>;
+```
+
+## Next.js App Router
+
+Every entry starts with `'use client'`, so components and providers can be imported straight into server components such as `app/layout.tsx`.
+
+## Rebrand it
+
+Pass `overrides` to the provider, either MUI `ThemeOptions` or a function of the mode. They are deep-merged over the defaults. See **Theme / Tokens** for the full palette.
+
+```tsx
+<ThemeModeProvider overrides={(mode) => ({ palette: { primary: { main: mode === 'light' ? '#1d4ed8' : '#93c5fd' } } })}>
+```

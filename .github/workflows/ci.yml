@@ -186,11 +186,54 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
 
+  # Builds Storybook and runs every story in Chromium: its play function, if
+  # it has one, then an axe scan for WCAG A and AA. Unlike the jsdom tests,
+  # this measures real colour contrast.
+  storybook-tests:
+    name: storybook-tests (${{ matrix.mode }})
+    runs-on: ubuntu-latest
+    # A hung Storybook server must not hold the pipeline.
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # Contrast is checked against each palette.
+        mode: [light, dark]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - id: playwright
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+      - id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      # The browser comes from the cache; its system libraries do not.
+      - if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - run: npm run build-storybook
+      - run: npm run test-storybook:ci
+        env:
+          STORYBOOK_MODE: ${{ matrix.mode }}
+      # The Pages job deploys this build, the one that passed the tests.
+      - if: github.ref == 'refs/heads/main' && matrix.mode == 'light'
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: storybook-static
+
   # Deploys Storybook to GitHub Pages on push to main.
   # Enable Pages in repo Settings > Pages > Source: GitHub Actions.
   storybook:
     if: github.ref == 'refs/heads/main'
-    needs: verify
+    needs: [verify, storybook-tests]
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -199,13 +242,10 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/download-artifact@v4
         with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm run build-storybook
+          name: storybook-static
+          path: storybook-static
       - uses: actions/upload-pages-artifact@v3
         with:
           path: storybook-static

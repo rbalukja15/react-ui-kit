@@ -1,5 +1,6 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import { expect, userEvent, within } from '@storybook/test';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { TitleCaseField, type TitleCaseFieldProps } from './TitleCaseField';
@@ -32,6 +33,18 @@ function Stateful(props: TitleCaseFieldProps) {
 export const Controlled: Story = {
   render: (args) => <Stateful {...args} />,
   args: { helperText: 'Cleaned up when you leave the field', placeholder: 'ada lovelace' },
+};
+
+/** Types a messy name and tabs out; the field tidies it up. */
+export const CleansOnBlur: Story = {
+  render: (args) => <Stateful {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole('textbox', { name: 'Full name' });
+    await userEvent.type(input, '  ada   lovelace ');
+    await userEvent.tab();
+    await expect(input).toHaveValue('Ada Lovelace');
+  },
 };
 
 export const Required: Story = {

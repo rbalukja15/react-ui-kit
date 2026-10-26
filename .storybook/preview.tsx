@@ -6,6 +6,8 @@ import { createAppTheme } from '../src/theme/theme';
 // Wrap every story in the library theme so Storybook doubles as living
 // docs. The "Mode" toolbar toggle below flips between light and dark.
 const preview: Preview = {
+  // Every component gets a generated Docs page with its prop table.
+  tags: ['autodocs'],
   globalTypes: {
     mode: {
       name: 'Mode',
@@ -35,6 +37,11 @@ const preview: Preview = {
   parameters: {
     controls: { expanded: true },
     backgrounds: { disable: true },
+    options: {
+      storySort: {
+        order: ['Introduction', 'Getting started', 'Theme', 'Layout', 'Navigation', 'Inputs', 'Data display', 'Feedback', 'Hooks'],
+      },
+    },
   },
 };
 
