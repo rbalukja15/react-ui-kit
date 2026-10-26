@@ -28,9 +28,11 @@ export function NewOrderForm() {
     defaultValues: { customerId: null, contact: '', items: '1', total: '', deliverBy: '' },
   });
 
-  const onSubmit = handleSubmit((values) => {
+  const onSubmit = handleSubmit(({ customerId, ...values }) => {
+    // The field is required, so this only guards the type.
+    if (customerId === null) return;
     const order = add({
-      customerId: values.customerId!,
+      customerId,
       status: 'pending',
       items: Number(values.items),
       total: Number(values.total),

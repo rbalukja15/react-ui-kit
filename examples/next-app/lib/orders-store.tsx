@@ -15,11 +15,14 @@ const OrdersContext = React.createContext<OrdersStore | null>(null);
 /** In-memory orders for the demo. A real app would fetch and mutate through its API. */
 export function OrdersProvider({ children }: { children: React.ReactNode }) {
   const [orders, setOrders] = React.useState(initialOrders);
+  // Ids keep counting up, so one freed by a delete is never handed out again.
+  const lastId = React.useRef(Math.max(...initialOrders.map((o) => Number(o.id.slice('ORD-'.length)))));
   const store = React.useMemo<OrdersStore>(
     () => ({
       orders,
       add: (order) => {
-        const created = { ...order, id: `ORD-${2100 + orders.length}` };
+        lastId.current += 1;
+        const created = { ...order, id: `ORD-${lastId.current}` };
         setOrders((current) => [created, ...current]);
         return created;
       },
