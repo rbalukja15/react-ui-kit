@@ -135,7 +135,7 @@
     "@storybook/addon-essentials": "^8.6.18",
     "@storybook/addon-interactions": "^8.6.18",
     "@storybook/blocks": "^8.6.18",
-    "@storybook/react-vite": "^8.6.0",
+    "@storybook/react-vite": "^10.6.3",
     "@storybook/test": "^8.6.18",
     "@storybook/test-runner": "^0.22.1",
     "@testing-library/jest-dom": "^6.4.0",
