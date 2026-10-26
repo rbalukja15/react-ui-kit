@@ -359,11 +359,11 @@ export function RouterUrlStateProvider({ children }: { children: ReactNode }) {
 npm install
 npm run storybook     # component workbench at :6006
 npm run test          # vitest
-npm run build-storybook && npm run test-storybook:ci   # every story in Chromium, with an axe scan
+npm run build-storybook && npm run test-storybook:ci   # every story in Chromium, with an axe scan (STORYBOOK_MODE=dark for the dark palette)
 npm run build         # tsup -> ESM + CJS + .d.ts
 ```
 
-CI (lint, typecheck, test, build) runs on every push, plus a compatibility matrix that typechecks and tests against each supported MUI major and each supported `@mui/x-date-pickers` major, and an install check that packs the library and runs a plain `npm install` of it in a fresh app on each MUI major, and a browser run of every story that replays its interaction test and scans it with axe; Storybook deploys to GitHub Pages from `main`.
+CI (lint, typecheck, test, build) runs on every push, plus a compatibility matrix that typechecks and tests against each supported MUI major and each supported `@mui/x-date-pickers` major, and an install check that packs the library and runs a plain `npm install` of it in a fresh app on each MUI major, and a browser run of every story, in light and in dark mode, that replays its interaction test and scans it with axe; Storybook deploys to GitHub Pages from `main`.
 
 ### Releasing
 
