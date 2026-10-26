@@ -1,5 +1,15 @@
 # @rbalukja15/ui-components
 
+## 0.3.0
+
+### Minor Changes
+
+- 40c9796: Add `DataTable`, a table with sorting, pagination, row selection, a columns menu, per-row actions, a sticky header and loading and empty states. In client mode it sorts and pages the rows itself; with `mode="server"` it shows the rows it is given and reports sort and page changes for your API to handle. Sort, page, page size, selection and hidden columns each work uncontrolled or controlled, so they can live in the URL with `useUrlState`. Headers carry `aria-sort`, row checkboxes are named with `getRowLabel`, and every string can be translated through `labels`. The sort rule is exported as `sortRows`.
+
+### Patch Changes
+
+- b6bc4d3: Raise light-mode contrast to WCAG AA where a browser check found it short. The label of an empty outlined field now uses `text.secondary` (it was 3.3:1 on the page background). Tonal chips now pass on the page background as well as on paper, and in their hover and focus state: light `warning.dark` is now `#7A521A`, `success.dark` `#4E5E34` and `error.dark` `#98302A`, and dark `primary.light` is `#88BBB2`.
+
 ## 0.2.0
 
 ### Minor Changes
