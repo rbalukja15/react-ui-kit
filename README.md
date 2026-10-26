@@ -382,6 +382,10 @@ Peers stay external and the package is marked side-effect free, so an app pays o
 
 Coverage has a floor of 95% for lines, statements and functions and 90% for branches. The full [coverage report](https://rbalukja15.github.io/react-ui-kit/coverage/) is published with Storybook.
 
+### Visual tests
+
+[Chromatic](https://www.chromatic.com/) snapshots every story in light and dark mode on each pull request. Changed snapshots are flagged for review on the pull request rather than failing it, and merges to `main` become the new baseline. TurboSnap only re-captures stories whose source changed.
+
 ### Releasing
 
 Versions and the [changelog](./CHANGELOG.md) are managed with [Changesets](https://github.com/changesets/changesets).

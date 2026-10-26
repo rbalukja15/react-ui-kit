@@ -42,6 +42,14 @@ const preview: Preview = {
         order: ['Introduction', 'Getting started', 'Theme', 'Layout', 'Navigation', 'Inputs', 'Data display', 'Feedback', 'Hooks'],
       },
     },
+    // Chromatic snapshots every story once per mode, so a theme change in
+    // either palette shows up as a visual diff on the pull request.
+    chromatic: {
+      modes: {
+        light: { mode: 'light' },
+        dark: { mode: 'dark' },
+      },
+    },
   },
 };
 
