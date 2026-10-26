@@ -1,5 +1,6 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import { expect, userEvent, within } from '@storybook/test';
 import { Box, Button, Chip, IconButton, Stack, TextField, Typography } from '@mui/material';
 import { UrlStateProvider, type UrlAdapter } from '../../hooks/UrlStateProvider';
 import { useUrlState } from '../../hooks/useUrlState';
@@ -92,6 +93,20 @@ type TableArgs = React.ComponentProps<typeof DataTable<Order>>;
 /** Sorting and pagination happen in the browser. Click a header to sort: ascending, descending, then off. */
 export const Basic: Story = {};
 
+/** Clicking a header sorts by it; the header's `aria-sort` follows. */
+export const SortsByHeader: Story = {
+  play: async ({ canvasElement }) => {
+    const table = within(canvasElement).getByRole('table', { name: 'Orders' });
+    const header = within(table).getByRole('columnheader', { name: 'Total' });
+    await userEvent.click(within(header).getByRole('button'));
+    await expect(header).toHaveAttribute('aria-sort', 'ascending');
+    const firstRow = within(table).getAllByRole('row')[1]!;
+    await expect(firstRow).toHaveTextContent('€19.50');
+    await userEvent.click(within(header).getByRole('button'));
+    await expect(header).toHaveAttribute('aria-sort', 'descending');
+  },
+};
+
 /** Checkboxes keep their selection across pages and sorts; the toolbar counts it. */
 function SelectionDemo(args: TableArgs) {
   const [selected, setSelected] = React.useState<DataTableRowId[]>([]);
@@ -113,7 +128,17 @@ function SelectionDemo(args: TableArgs) {
   );
 }
 
-export const Selection: Story = { render: (args) => <SelectionDemo {...args} /> };
+export const Selection: Story = {
+  render: (args) => <SelectionDemo {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('checkbox', { name: 'Select order ORD-1040' }));
+    await userEvent.click(canvas.getByRole('checkbox', { name: 'Select order ORD-1041' }));
+    await expect(canvas.getByRole('status')).toHaveTextContent('2 selected');
+    await userEvent.click(canvas.getByRole('button', { name: 'Cancel orders' }));
+    await expect(canvas.getByRole('status')).toBeEmptyDOMElement();
+  },
+};
 
 /** Everything at once: selection, a columns menu, row actions and a sticky header in a scrolling container. */
 export const FullFeatured: Story = {
@@ -250,7 +275,17 @@ function UrlStateDemo(args: TableArgs) {
   );
 }
 
-export const UrlState: Story = { render: (args) => <UrlStateDemo {...args} /> };
+export const UrlState: Story = {
+  render: (args) => <UrlStateDemo {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Go to next page' }));
+    await expect(canvas.getByText('/orders?sort=total&dir=desc&page=1')).toBeInTheDocument();
+    // Sorting returns to the first page, and the URL keeps both changes.
+    await userEvent.click(canvas.getByRole('button', { name: /^Customer/ }));
+    await expect(canvas.getByText('/orders?sort=customer')).toBeInTheDocument();
+  },
+};
 
 export const Loading: Story = { args: { loading: true, selectable: true } };
 

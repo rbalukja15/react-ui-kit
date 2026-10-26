@@ -419,8 +419,9 @@ Peers stay external and the package is marked side-effect free, so an app pays o
 
 | Import | Budget |
 | --- | --- |
-| Everything from the main entry | 11.5 kB |
+| Everything from the main entry | 14 kB |
 | `{ EmptyState }` alone | 1 kB |
+| `{ DataTable }` alone | 4 kB |
 | `{ createAppTheme }` alone | 2.5 kB |
 | Everything from `/rhf` | 2.5 kB |
 | Everything from `/date-picker` or `/date-picker/rhf` (MUI X not counted) | 1.5 kB |
