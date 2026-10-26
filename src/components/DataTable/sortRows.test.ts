@@ -35,5 +35,7 @@ describe('sortRows', () => {
 
   it('falls back to string comparison for mixed types', () => {
     expect(sortRows<string | number>(['b', 1, 'a'], (r) => r, 'asc')).toEqual([1, 'a', 'b']);
+    // A boolean becomes 0 or 1 first, so it sorts among the digits.
+    expect(sortRows<string | boolean>(['yes', true, '0'], (r) => r, 'asc')).toEqual(['0', true, 'yes']);
   });
 });

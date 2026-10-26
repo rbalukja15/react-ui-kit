@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { act } from 'react';
+import { useUrlState } from '../../hooks/useUrlState';
+import { createLaggingRouter } from '../../hooks/testing/createLaggingRouter';
 import { DataTable, type DataTableColumn, type DataTableProps } from './DataTable';
 
 interface Person {
@@ -23,6 +26,8 @@ const columns: DataTableColumn<Person>[] = [
   { id: 'age', header: 'Age', sortable: true, align: 'right' },
   { id: 'city', header: 'City', cell: (p) => <em>{p.city}</em> },
 ];
+
+const URL_DEFAULTS = { sort: '', dir: 'asc', page: 0 };
 
 function setup(props: Partial<DataTableProps<Person>> = {}) {
   const user = userEvent.setup();
@@ -247,6 +252,118 @@ describe('<DataTable>', () => {
     expect(names(table, 1)).toEqual(['Grace', 'Edsger', 'Alan', 'Ada', 'Katherine']);
     await user.click(within(table).getByRole('checkbox', { name: 'Select 5' }));
     expect(within(table).getByRole('checkbox', { name: 'Select 5' })).toBeChecked();
+  });
+
+  it('drops selected ids whose rows are filtered out', async () => {
+    const onSelectionChange = vi.fn();
+    function Filtered() {
+      const [q, setQ] = React.useState('');
+      return (
+        <>
+          <button type="button" onClick={() => setQ('a')}>
+            Filter
+          </button>
+          <DataTable
+            rows={people.filter((p) => p.name.toLowerCase().startsWith(q))}
+            columns={columns}
+            getRowId={(p) => p.id}
+            label="People"
+            selectable
+            defaultSelectedIds={[1, 2]}
+            onSelectionChange={onSelectionChange}
+          />
+        </>
+      );
+    }
+    const user = userEvent.setup();
+    render(<Filtered />);
+    expect(screen.getByRole('status')).toHaveTextContent('2 selected');
+    await user.click(screen.getByRole('button', { name: 'Filter' }));
+    expect(onSelectionChange).toHaveBeenLastCalledWith([1]);
+    expect(screen.getByRole('status')).toHaveTextContent('1 selected');
+  });
+
+  it('renders the selection status region before anything is selected', async () => {
+    const { user, table } = setup({ selectable: true });
+    const status = screen.getByRole('status');
+    expect(status).toBeEmptyDOMElement();
+    await user.click(within(table).getByRole('checkbox', { name: 'Select 1' }));
+    expect(screen.getByRole('status')).toBe(status);
+    expect(status).toHaveTextContent('1 selected');
+  });
+
+  it('clears the sort when its column is hidden', async () => {
+    const onSortChange = vi.fn();
+    const { user, table } = setup({
+      columnsMenu: true,
+      defaultSort: { columnId: 'name', direction: 'desc' },
+      onSortChange,
+    });
+    await user.click(screen.getByRole('button', { name: 'Columns' }));
+    await user.click(within(screen.getByRole('menu')).getByRole('menuitemcheckbox', { name: 'Name' }));
+    await user.keyboard('{Escape}');
+    expect(onSortChange).toHaveBeenLastCalledWith(null);
+    expect(names(table)).toEqual(['36', '85', '41', '', '72']);
+  });
+
+  it('ignores a sort on a column hidden from outside', () => {
+    const { table } = setup({ sort: { columnId: 'name', direction: 'desc' }, hiddenColumns: ['name'] });
+    expect(names(table)).toEqual(['36', '85', '41', '', '72']);
+  });
+
+  it('shows values that are not strings or numbers as text', () => {
+    render(
+      <DataTable
+        rows={[{ id: 1, joined: new Date(Date.UTC(2026, 0, 2)), active: true }]}
+        columns={[
+          { id: 'joined', header: 'Joined' },
+          { id: 'active', header: 'Active' },
+        ]}
+        getRowId={(r) => r.id}
+        label="Members"
+      />,
+    );
+    const table = screen.getByRole('table', { name: 'Members' });
+    expect(names(table)[0]).toContain('2026');
+    expect(names(table, 1)).toEqual(['true']);
+  });
+
+  it('moves a controlled page that is past the end back to the last page', () => {
+    const onPageChange = vi.fn();
+    setup({ page: 4, onPageChange, pageSizeOptions: [2] });
+    expect(onPageChange).toHaveBeenCalledWith(2);
+  });
+
+  it('keeps both the sort and the page reset when they live in the URL', async () => {
+    const { router, Wrapper } = createLaggingRouter('page=1');
+    function Orders() {
+      const [state, setState] = useUrlState(URL_DEFAULTS);
+      return (
+        <DataTable
+          rows={people}
+          columns={columns}
+          getRowId={(p) => p.id}
+          label="People"
+          pageSizeOptions={[2]}
+          sort={state.sort ? { columnId: state.sort, direction: state.dir === 'desc' ? 'desc' : 'asc' } : null}
+          onSortChange={(next) => setState({ sort: next?.columnId ?? '', dir: next?.direction ?? 'asc' })}
+          page={state.page}
+          onPageChange={(page) => setState({ page })}
+        />
+      );
+    }
+    const user = userEvent.setup();
+    render(
+      <Wrapper>
+        <Orders />
+      </Wrapper>,
+    );
+    const table = screen.getByRole('table', { name: 'People' });
+    expect(names(table)).toEqual(['Alan', 'Katherine']);
+    await user.click(within(table).getByRole('button', { name: 'Name' }));
+    act(() => router.flush());
+    expect(router.writes.at(-1)).toBe('sort=name');
+    expect(names(table)).toEqual(['Ada', 'Alan']);
   });
 
   it('makes a scrolling table reachable by keyboard', () => {

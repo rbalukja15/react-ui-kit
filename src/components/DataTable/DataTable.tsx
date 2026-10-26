@@ -32,7 +32,7 @@ export interface DataTableColumn<Row> {
   id: string;
   /** Header content. A string also names the column in the columns menu. */
   header: React.ReactNode;
-  /** Cell content. Defaults to `row[id]`. */
+  /** Cell content. Defaults to `row[id]`, as text when it is not a string or number. */
   cell?: (row: Row) => React.ReactNode;
   /** Shows a sort control in the header. */
   sortable?: boolean;
@@ -122,7 +122,11 @@ export interface DataTableProps<Row> {
   /** Hides the pagination bar and shows every row. Client mode only. */
   disablePagination?: boolean;
 
-  /** Adds a checkbox column. Selection is kept across pages and sorts. */
+  /**
+   * Adds a checkbox column. Selection is kept across pages and sorts. In
+   * client mode, ids whose rows leave `rows` (for example after a filter)
+   * are dropped, so the count and bulk actions only cover rows that exist.
+   */
   selectable?: boolean;
   /** Controlled selection. */
   selectedIds?: readonly DataTableRowId[];
@@ -172,6 +176,11 @@ function readProperty(row: unknown, id: string): unknown {
   return row !== null && typeof row === 'object' ? (row as Record<string, unknown>)[id] : undefined;
 }
 
+function defaultCell(value: unknown): React.ReactNode {
+  if (value === null || value === undefined) return null;
+  return typeof value === 'string' || typeof value === 'number' ? value : String(value);
+}
+
 function columnName<Row>(column: DataTableColumn<Row>): string {
   return column.menuLabel ?? (typeof column.header === 'string' ? column.header : column.id);
 }
@@ -193,14 +202,15 @@ function LabelledCheckbox({
   sx,
   ...props
 }: { id: string; label: string; mixed?: boolean } & Omit<CheckboxProps, 'id' | 'indeterminate'>) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
   React.useEffect(() => {
-    const input = document.getElementById(id);
-    if (input instanceof HTMLInputElement) input.indeterminate = mixed;
-  }, [id, mixed]);
+    if (inputRef.current) inputRef.current.indeterminate = mixed;
+  }, [mixed]);
   return (
     <>
       <Checkbox
         id={id}
+        inputRef={inputRef}
         {...props}
         {...(mixed && {
           checked: false,
@@ -306,11 +316,12 @@ export function DataTable<Row>({
 
   const sortedRows = React.useMemo(() => {
     if (isServer || !sort) return rows;
-    const column = columns.find((c) => c.id === sort.columnId);
+    // A hidden column shows no sort indicator, so it does not sort either.
+    const column = columns.find((c) => c.id === sort.columnId && !hidden.includes(c.id));
     if (!column) return rows;
     const getValue = column.sortValue ?? ((row: Row) => readProperty(row, column.id) as SortValue);
     return sortRows(rows, getValue, sort.direction);
-  }, [isServer, sort, rows, columns]);
+  }, [isServer, sort, rows, columns, hidden]);
 
   const total = isServer ? (rowCount ?? -1) : rows.length;
   // A page past the end (rows were removed, or the URL said so) shows the last page.
@@ -318,6 +329,24 @@ export function DataTable<Row>({
   const currentPage = total === -1 ? page : Math.min(page, lastPage);
   const pageRows =
     isServer || !paginated ? sortedRows : sortedRows.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
+
+  // Tell a controlling parent when its page is past the end, so a page kept
+  // in the URL does not stay stale.
+  const pageOutOfRange = !loading && currentPage !== page;
+  React.useEffect(() => {
+    if (pageOutOfRange) setPage(currentPage);
+  }, [pageOutOfRange, currentPage, setPage]);
+
+  // In client mode `rows` is every row, so a selected id missing from it
+  // belongs to a row that was filtered out or removed.
+  const rowIds = React.useMemo(
+    () => (isServer || loading ? null : new Set(rows.map(getRowId))),
+    [isServer, loading, rows, getRowId],
+  );
+  const staleSelection = rowIds !== null && selected.some((id) => !rowIds.has(id));
+  React.useEffect(() => {
+    if (staleSelection && rowIds) setSelected(selected.filter((id) => rowIds.has(id)));
+  }, [staleSelection, rowIds, selected, setSelected]);
 
   const selectedSet = new Set(selected);
   const pageIds = pageRows.map(getRowId);
@@ -347,12 +376,16 @@ export function DataTable<Row>({
   const menuId = React.useId();
   const idPrefix = React.useId();
   const toggleColumn = (id: string) => {
-    setHidden(hidden.includes(id) ? hidden.filter((h) => h !== id) : [...hidden, id]);
+    const hiding = !hidden.includes(id);
+    setHidden(hiding ? [...hidden, id] : hidden.filter((h) => h !== id));
+    if (hiding && sort?.columnId === id) setSort(null);
   };
   const visibleHideable = columns.filter((c) => c.hideable !== false && !hidden.includes(c.id)).length;
 
   const columnCount = visibleColumns.length + (selectable ? 1 : 0) + (rowActions ? 1 : 0);
-  const showToolbar = Boolean(toolbar) || columnsMenu || (selectable && selected.length > 0);
+  // A selectable table always renders its status region, so screen readers
+  // are already listening when the first selection changes its text.
+  const showToolbar = Boolean(toolbar) || columnsMenu || selectable;
   const placeholderRows = Math.min(pageSize, 10);
 
   return (
@@ -491,7 +524,7 @@ export function DataTable<Row>({
                     )}
                     {visibleColumns.map((column) => (
                       <TableCell key={column.id} align={column.align}>
-                        {column.cell ? column.cell(row) : (readProperty(row, column.id) as React.ReactNode)}
+                        {column.cell ? column.cell(row) : defaultCell(readProperty(row, column.id))}
                       </TableCell>
                     ))}
                     {rowActions && (

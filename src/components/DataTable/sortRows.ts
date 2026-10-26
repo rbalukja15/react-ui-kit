@@ -18,6 +18,8 @@ function compareValues(a: SortValue, b: SortValue): number {
   if (typeof a === 'boolean') a = Number(a);
   if (typeof b === 'boolean') b = Number(b);
   if (typeof a === 'number' && typeof b === 'number') return a - b;
+  // Mixed types (a column holding both numbers and strings, say) compare as
+  // text. A boolean is `0` or `1` by now, so it sorts among the digits.
   return collator.compare(String(a), String(b));
 }
 
