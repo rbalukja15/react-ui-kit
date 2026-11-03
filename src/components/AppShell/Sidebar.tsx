@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Box, Divider, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Tooltip } from '@mui/material';
 import { alpha, type Theme } from '@mui/material/styles';
 import { findActiveIndex, navItemKey, type IsNavItemActive, type NavItem, type ShellBreakpoint } from './navItems';
+import { kit } from '../../internal/kitTokens';
 
 interface SidebarProps {
   items: NavItem[];
@@ -57,7 +58,7 @@ export function Sidebar({
   const desktopWidth = collapsed ? miniWidth : width;
 
   const renderItem = (item: NavItem, isCurrent: boolean, mini: boolean) => (
-    <ListItem key={navItemKey(item)} disablePadding sx={{ mb: 0.5 }}>
+    <ListItem key={navItemKey(item)} disablePadding sx={{ mb: '2px' }}>
       {/* An empty title keeps the tooltip off without remounting the button. */}
       <Tooltip title={mini ? item.label : ''} placement="right" arrow>
         <ListItemButton
@@ -69,18 +70,25 @@ export function Sidebar({
           aria-current={isCurrent ? 'page' : undefined}
           aria-label={mini ? item.label : undefined}
           sx={(theme: Theme) => ({
-            borderRadius: 2,
-            px: mini ? 1 : 2,
+            borderRadius: '10px',
+            px: mini ? 1 : 1.5,
             py: 1,
+            border: '1px solid transparent',
             justifyContent: mini ? 'center' : 'flex-start',
-            color: isCurrent ? 'primary.contrastText' : 'text.secondary',
-            bgcolor: isCurrent ? 'primary.main' : 'transparent',
-            '& .MuiListItemIcon-root': { color: 'inherit', minWidth: mini ? 0 : 40, justifyContent: 'center' },
+            color: isCurrent ? (theme.palette.mode === 'light' ? 'primary.main' : 'primary.light') : 'text.primary',
+            bgcolor: isCurrent ? kit(theme).surface.card : 'transparent',
+            borderColor: isCurrent ? alpha(theme.palette.primary.main, 0.3) : 'transparent',
+            '& .MuiListItemIcon-root': {
+              color: isCurrent ? 'inherit' : 'text.secondary',
+              minWidth: mini ? 0 : 32,
+              justifyContent: mini ? 'center' : 'flex-start',
+              '& svg': { fontSize: '1.25rem' },
+            },
             '& .MuiListItemText-primary': { fontSize: '0.875rem', fontWeight: isCurrent ? 600 : 400 },
             '&:hover': {
-              bgcolor: isCurrent ? 'primary.dark' : alpha(theme.palette.primary.main, 0.08),
-              color: isCurrent ? 'primary.contrastText' : 'text.primary',
+              bgcolor: isCurrent ? kit(theme).surface.card : alpha(theme.palette.text.primary, 0.04),
             },
+            '&.Mui-focusVisible': { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: -2 },
           })}
         >
           <ListItemIcon>{item.icon}</ListItemIcon>

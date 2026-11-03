@@ -148,6 +148,8 @@ export interface DataTableProps<Row> {
   emptyState?: React.ReactNode;
   /** Content at the start of the toolbar, such as a search field or bulk actions. */
   toolbar?: React.ReactNode;
+  /** A note at the start of the pagination bar, such as what the rows include. */
+  footer?: React.ReactNode;
   /** Keeps the header visible while the body scrolls; set `maxHeight` too. */
   stickyHeader?: boolean;
   /** Height at which the table scrolls, e.g. `480` or `'60vh'`. */
@@ -287,6 +289,7 @@ export function DataTable<Row>({
   rowActions,
   emptyState,
   toolbar,
+  footer,
   stickyHeader = false,
   maxHeight,
   size = 'medium',
@@ -541,22 +544,30 @@ export function DataTable<Row>({
           </TableBody>
         </Table>
       </TableContainer>
-      {paginated && (
-        <TablePagination
-          component="div"
-          count={total}
-          page={currentPage}
-          rowsPerPage={pageSize}
-          rowsPerPageOptions={pageSizeOptions}
-          onPageChange={(_, next) => setPage(next)}
-          onRowsPerPageChange={(event) => {
-            setPageSize(Number(event.target.value));
-            setPage(0);
-          }}
-          labelRowsPerPage={labels.rowsPerPage}
-          labelDisplayedRows={labels.displayedRows}
-          getItemAriaLabel={labels.page}
-        />
+      {(paginated || footer !== undefined) && (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 2 }}>
+          {footer !== undefined && (
+            <Box sx={{ py: 1, fontSize: '0.8125rem', color: 'text.secondary' }}>{footer}</Box>
+          )}
+          {paginated && (
+            <TablePagination
+              component="div"
+              count={total}
+              page={currentPage}
+              rowsPerPage={pageSize}
+              rowsPerPageOptions={pageSizeOptions}
+              onPageChange={(_, next) => setPage(next)}
+              onRowsPerPageChange={(event) => {
+                setPageSize(Number(event.target.value));
+                setPage(0);
+              }}
+              labelRowsPerPage={labels.rowsPerPage}
+              labelDisplayedRows={labels.displayedRows}
+              getItemAriaLabel={labels.page}
+              sx={{ ml: 'auto' }}
+            />
+          )}
+        </Box>
       )}
     </Box>
   );

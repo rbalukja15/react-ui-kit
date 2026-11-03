@@ -38,7 +38,8 @@ describe('MuiButton', () => {
     const button = style(screen.getByRole('button', { name: 'Save changes' }));
     expect(button.textTransform).toBe('none');
     expect(button.fontWeight).toBe('600');
-    expect(button.borderRadius).toBe('9px');
+    expect(button.borderRadius).toBe('12px');
+    expect(button.boxShadow).toBe('none');
   });
 });
 
@@ -124,16 +125,17 @@ describe('tables', () => {
     </Table>
   );
 
-  it.each(modes)('tints and bolds the header row in %s mode', (mode) => {
+  it.each(modes)('draws the header row as quiet grey labels on the card in %s mode', (mode) => {
     const { theme } = renderWith(table, mode);
-    expect(style(screen.getByText('Name')).backgroundColor).toBe(color(mode === 'light' ? '#F2F0E8' : '#2E2A26'));
-    const root = theme.components?.MuiTableHead?.styleOverrides?.root as Record<string, { fontWeight: number }>;
-    expect(root['& .MuiTableCell-head']?.fontWeight).toBe(700);
+    const head = style(screen.getByText('Name'));
+    expect(head.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(head.color).toBe(color(theme.palette.text.secondary));
+    expect(head.fontWeight).toBe('500');
   });
 
   it('lines numbers up in table cells', () => {
-    const root = createAppTheme('light').components?.MuiTableCell?.styleOverrides?.root as { fontVariantNumeric: string };
-    expect(root.fontVariantNumeric).toBe('tabular-nums');
+    renderWith(table);
+    expect(style(screen.getByText('Ada')).fontVariantNumeric).toBe('tabular-nums');
   });
 
   it('tints row hover with the brand colour, including an overridden one', () => {
