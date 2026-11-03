@@ -58,7 +58,7 @@ export function Pill({ children, tone = 'neutral', icon, size = 'small', sx }: P
             ...base,
             bgcolor: alpha(color.main, light ? 0.08 : 0.16),
             border: `1px solid ${alpha(color.main, light ? 0.32 : 0.4)}`,
-            color: light ? (tone === 'primary' ? color.main : color.dark) : color.light,
+            color: light ? color.dark : color.light,
           };
         },
         ...(Array.isArray(sx) ? sx : [sx]),

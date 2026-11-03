@@ -46,13 +46,12 @@ declare module '@mui/material/styles' {
  */
 export type ThemeOverrides = ThemeOptions | ((mode: ThemeMode) => ThemeOptions);
 
-// Display/serif face — editorial serif headings. Consumers load
-// Newsreader themselves (see README "Fonts"). Falls back to a system
-// serif stack if the webfont isn't present.
-const displayFont = '"Newsreader", Georgia, "Times New Roman", serif';
+// One sans-serif family for headings and body. Consumers load Mona Sans
+// themselves (see README "Fonts"); without it the system UI face is used.
+const fontStack = '"Mona Sans", "Mona Sans Variable", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
 
 /**
- * Library theme — a warm editorial design language on a teal brand
+ * Library theme — a warm, flat design language on a teal brand
  * axis, in both light and a muted dark mode.
  *
  * Four principles drive the design:
@@ -73,9 +72,9 @@ const displayFont = '"Newsreader", Georgia, "Times New Roman", serif';
  *      hover / divider / tooltip / focus is re-routed through the warm
  *      + teal axis below. Teal is muted in dark mode to avoid glare.
  *
- *   4. **Editorial serif display.** ``h1``–``h6``, dialog titles and stat
- *      numbers use Newsreader; body, captions and buttons stay Inter
- *      sentence-case.
+ *   4. **One sans-serif family.** Headings, body, captions and buttons
+ *      all use Mona Sans; headings get weight 600 and tight tracking
+ *      instead of a second display face.
  *
  * Tonal chips are the other behavioural change: MUI's default
  * ``<Chip color="error" />`` is a vivid filled block — fine for a single
@@ -116,6 +115,16 @@ const sharedComponents = (mode: PaletteMode) => ({
         color: theme.palette.text.primary,
         '&:hover': { backgroundColor: theme.palette.surface.tray, borderColor: theme.palette.line.strong },
       }),
+    },
+  },
+  // The muted dark-mode teal is too dark for text on the dark cards, so
+  // primary links use its light shade there.
+  MuiLink: {
+    styleOverrides: {
+      root: ({ theme, ownerState }: { theme: Theme; ownerState: { color?: unknown } }) =>
+        theme.palette.mode === 'dark' && (ownerState.color === undefined || ownerState.color === 'primary')
+          ? { color: theme.palette.primary.light, textDecorationColor: alpha(theme.palette.primary.light, 0.4) }
+          : {},
     },
   },
   MuiIconButton: {
@@ -315,9 +324,9 @@ const sharedComponents = (mode: PaletteMode) => ({
   MuiDialogTitle: {
     styleOverrides: {
       root: {
-        fontFamily: displayFont,
         fontSize: '1.25rem',
         fontWeight: 600,
+        letterSpacing: '-0.02em',
       },
     },
   },
@@ -429,13 +438,13 @@ export function createAppTheme(mode: ThemeMode = 'light', overrides?: ThemeOverr
         : { muted: '#2F4A46', neutral: '#4A453D' },
     },
     typography: {
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-      h1: { fontFamily: displayFont, fontWeight: 600, fontSize: '2rem', lineHeight: 1.15, letterSpacing: '-0.01em' },
-      h2: { fontFamily: displayFont, fontWeight: 600, fontSize: '1.875rem', lineHeight: 1.2, letterSpacing: '-0.01em' },
-      h3: { fontFamily: displayFont, fontWeight: 600, fontSize: '1.5rem', lineHeight: 1.25, letterSpacing: '-0.005em' },
-      h4: { fontFamily: displayFont, fontWeight: 600, fontSize: '1.25rem', lineHeight: 1.3 },
-      h5: { fontFamily: displayFont, fontWeight: 600, fontSize: '1.2rem', lineHeight: 1.35 },
-      h6: { fontFamily: displayFont, fontWeight: 600, fontSize: '1.05rem', lineHeight: 1.4 },
+      fontFamily: fontStack,
+      h1: { fontWeight: 600, fontSize: '2rem', lineHeight: 1.15, letterSpacing: '-0.03em' },
+      h2: { fontWeight: 600, fontSize: '1.625rem', lineHeight: 1.2, letterSpacing: '-0.025em' },
+      h3: { fontWeight: 600, fontSize: '1.375rem', lineHeight: 1.25, letterSpacing: '-0.02em' },
+      h4: { fontWeight: 600, fontSize: '1.25rem', lineHeight: 1.3, letterSpacing: '-0.02em' },
+      h5: { fontWeight: 600, fontSize: '1.125rem', lineHeight: 1.35, letterSpacing: '-0.015em' },
+      h6: { fontWeight: 600, fontSize: '1rem', lineHeight: 1.4, letterSpacing: '-0.01em' },
       body1: { fontSize: '0.9375rem', lineHeight: 1.55 },
       body2: { fontSize: '0.875rem', lineHeight: 1.55 },
       caption: { fontSize: '0.75rem', lineHeight: 1.4, letterSpacing: '0.01em' },

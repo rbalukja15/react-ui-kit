@@ -27,7 +27,7 @@ function TokensShowcase() {
       <Box>
         <Typography variant="h3" gutterBottom>Tokens</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 560, mb: 1 }}>
-          Warm editorial surfaces with a teal brand axis. Headings render in Newsreader serif; body and labels in Inter sans. Light and a muted dark mode ship together — toggle via the Mode control in the toolbar.
+          Warm surfaces with a teal brand axis, set in one sans-serif family, Mona Sans. Light and a muted dark mode ship together — toggle via the Mode control in the toolbar.
         </Typography>
       </Box>
 
@@ -49,15 +49,15 @@ function TokensShowcase() {
       <Box>
         <Typography variant="h5" gutterBottom>Typography</Typography>
         <Stack spacing={1}>
-          <Typography variant="h1">h1 · Newsreader serif</Typography>
-          <Typography variant="h2">h2 · Newsreader serif</Typography>
-          <Typography variant="h3">h3 · Newsreader serif</Typography>
-          <Typography variant="h4">h4 · Newsreader serif</Typography>
-          <Typography variant="h5">h5 · Newsreader serif</Typography>
-          <Typography variant="h6">h6 · Newsreader serif</Typography>
-          <Typography variant="body1">Body 1 — Inter sans, 0.9375rem with 1.55 line-height for breathable scanning.</Typography>
-          <Typography variant="body2">Body 2 — Inter sans, 0.875rem; the default for dense metadata.</Typography>
-          <Typography variant="caption" display="block">Caption — Inter sans, 0.75rem; single-line labels.</Typography>
+          <Typography variant="h1">h1 · Mona Sans 600</Typography>
+          <Typography variant="h2">h2 · Mona Sans 600</Typography>
+          <Typography variant="h3">h3 · Mona Sans 600</Typography>
+          <Typography variant="h4">h4 · Mona Sans 600</Typography>
+          <Typography variant="h5">h5 · Mona Sans 600</Typography>
+          <Typography variant="h6">h6 · Mona Sans 600</Typography>
+          <Typography variant="body1">Body 1 — Mona Sans, 0.9375rem with 1.55 line-height for breathable scanning.</Typography>
+          <Typography variant="body2">Body 2 — Mona Sans, 0.875rem; the default for dense metadata.</Typography>
+          <Typography variant="caption" display="block">Caption — Mona Sans, 0.75rem; single-line labels.</Typography>
         </Stack>
       </Box>
 

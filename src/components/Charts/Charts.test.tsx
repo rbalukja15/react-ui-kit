@@ -12,16 +12,20 @@ const data = [
 ];
 
 describe('<BarChart>', () => {
-  it('makes bars buttons when selectable and labels the picked one', async () => {
+  it('is one slider when selectable, moved by the arrow keys', async () => {
     const onSelect = vi.fn();
     const { container } = render(
       <BarChart aria-label="Revenue by day" data={data} selectedIndex={1} onSelect={onSelect} formatSelected={(d) => `Picked ${d.value}`} />,
     );
-    expect(screen.getByRole('group', { name: 'Revenue by day' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Tue, 30 L' })).toHaveAttribute('aria-pressed', 'true');
+    const slider = screen.getByRole('slider', { name: 'Revenue by day' });
+    expect(slider).toHaveAttribute('aria-valuetext', 'Tue, 30 L');
     expect(screen.getByText('Picked 30')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Mon, 10 L' }));
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    slider.focus();
+    await userEvent.keyboard('{ArrowLeft}');
     expect(onSelect).toHaveBeenCalledWith(0);
+    await userEvent.keyboard('{End}');
+    expect(onSelect).toHaveBeenCalledTimes(1);
     expect(await axe(container)).toHaveNoViolations();
   });
 

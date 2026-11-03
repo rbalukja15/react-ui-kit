@@ -5,6 +5,7 @@ import { BottomNav } from './BottomNav';
 import { MenuIcon, MenuOpenIcon } from './icons';
 import type { IsNavItemActive, NavItem, ShellBreakpoint } from './navItems';
 import { Sidebar } from './Sidebar';
+import { kit } from '../../internal/kitTokens';
 
 export interface AppShellLabels {
   /** Name of the sidebar's navigation landmark. Defaults to `'Main navigation'`. */
@@ -213,7 +214,7 @@ export function AppShell({
           position="sticky"
           color="inherit"
           elevation={0}
-          sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}
+          sx={(theme) => ({ bgcolor: kit(theme).surface.card, borderBottom: `1px solid ${kit(theme).line.strong}` })}
         >
           <Toolbar sx={{ gap: 0.5, px: { xs: 1, sm: 2 } }}>
             <IconButton

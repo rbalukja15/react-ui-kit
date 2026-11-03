@@ -15,7 +15,7 @@ A small, deliberately-scoped React component library built on **MUI** (v5, v6, v
 
 ## Design language
 
-Warm editorial surfaces (cream paper, soft warm hairlines) on a teal brand axis. Headings render in **Newsreader** serif for an editorial display; body and labels stay **Inter** sans. Both light and a muted dark mode ship out of the box; semantic colours (success / warning / error / info) flip per mode to stay readable without glare.
+Warm surfaces (cream paper, soft warm hairlines) on a teal brand axis, with flat white cards in beige trays and no shadows. Everything is set in one sans-serif family, **Mona Sans**, with tight tracking on headings. Both light and a muted dark mode ship out of the box; semantic colours (success / warning / error / info) flip per mode to stay readable without glare.
 
 Tonal chips are the signature behaviour: filled `<Chip color="…">` renders as pale-tinted background + strong-text foreground rather than the bright filled block — quieter on dense pages.
 
@@ -37,13 +37,13 @@ npm install git+https://github.com/rbalukja15/react-ui-kit.git#main
 
 ### Fonts
 
-The theme references **Newsreader** for headings and **Inter** for body. Consumers must load them. For Next.js, add to `app/layout.tsx`:
+The theme uses **Mona Sans** for headings and body. Consumers must load it; without it the system UI face is used. For Next.js, add to `app/layout.tsx`:
 
 ```tsx
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 <link
-  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap"
+  href="https://fonts.googleapis.com/css2?family=Mona+Sans:wght@400..700&display=swap"
   rel="stylesheet"
 />
 ```

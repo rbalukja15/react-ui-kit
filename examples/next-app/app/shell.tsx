@@ -23,11 +23,11 @@ const titles: Record<string, string> = { '/': 'Dashboard', '/orders': 'Orders', 
 function Logo({ withName }: { withName?: boolean }) {
   return (
     <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-      <Typography component="span" sx={{ fontFamily: 'Newsreader, serif', fontWeight: 600, fontSize: 22, color: 'primary.main' }}>
+      <Typography component="span" sx={{ fontWeight: 600, fontSize: 22, color: 'primary.main' }}>
         ◆
       </Typography>
       {withName && (
-        <Typography component="span" sx={{ fontFamily: 'Newsreader, serif', fontWeight: 600, fontSize: 18 }}>
+        <Typography component="span" sx={{ fontWeight: 600, fontSize: 18 }}>
           Ledger
         </Typography>
       )}

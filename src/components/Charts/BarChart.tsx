@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, ButtonBase } from '@mui/material';
+import { Box } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { Pill } from '../Pill';
 import { kit } from '../../internal/kitTokens';
@@ -16,7 +16,7 @@ export interface BarChartProps {
   'aria-label': string;
   /** The highlighted bar. Drawn in the primary colour with a pill label above it. */
   selectedIndex?: number;
-  /** Makes each bar a button that selects it. */
+  /** Lets people pick a bar by pointer or keyboard; the chart becomes one slider. */
   onSelect?: (index: number) => void;
   /** Text of the pill above the selected bar. Defaults to the bar's `label`. */
   formatSelected?: (datum: BarDatum, index: number) => React.ReactNode;
@@ -34,6 +34,10 @@ const PILL_ROOM = 34;
 /**
  * Soft rounded bars, one series. Pass `onSelect` to let people pick a bar;
  * the picked one turns primary and shows its value in a pill.
+ *
+ * A selectable chart is one `slider`: click or tap anywhere above a bar, or
+ * focus the chart and use the arrow keys, Home and End. Thin bars stay
+ * visuals rather than separate buttons, which would be too small to hit.
  */
 export function BarChart({
   data,
@@ -51,12 +55,65 @@ export function BarChart({
   const selected = selectedIndex !== undefined ? data[selectedIndex] : undefined;
   const pillLeft = selectedIndex !== undefined ? Math.min(88, Math.max(12, ((selectedIndex + 0.5) * 100) / data.length)) : 0;
 
+  const count = data.length;
+  const interactive = onSelect !== undefined && count > 0;
+  const current = selectedIndex ?? -1;
+
+  const pick = (index: number) => {
+    if (!onSelect) return;
+    const next = Math.min(count - 1, Math.max(0, index));
+    if (next !== selectedIndex) onSelect(next);
+  };
+
+  const onKeyDown = (event: React.KeyboardEvent) => {
+    const steps: Record<string, number> = {
+      ArrowRight: current + 1,
+      ArrowUp: current + 1,
+      ArrowLeft: current < 0 ? 0 : current - 1,
+      ArrowDown: current < 0 ? 0 : current - 1,
+      Home: 0,
+      End: count - 1,
+    };
+    const target = steps[event.key];
+    if (target === undefined) return;
+    event.preventDefault();
+    pick(target);
+  };
+
+  const onClick = (event: React.MouseEvent<HTMLElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    pick(Math.floor(((event.clientX - rect.left) / rect.width) * count));
+  };
+
+  const sliderProps = interactive
+    ? {
+        role: 'slider',
+        tabIndex: 0,
+        'aria-label': ariaLabel,
+        'aria-valuemin': 0,
+        'aria-valuemax': count - 1,
+        'aria-valuenow': selectedIndex ?? 0,
+        'aria-valuetext': selected ? selected.label : undefined,
+        onKeyDown,
+        onClick,
+      }
+    : { role: 'group', 'aria-label': ariaLabel };
+
   return (
     <Box sx={[{ display: 'flex', flexDirection: 'column', gap: 1 }, ...(Array.isArray(sx) ? sx : [sx])]}>
       <Box
-        role="group"
-        aria-label={ariaLabel}
-        sx={(theme) => ({ position: 'relative', height, borderBottom: `1px solid ${kit(theme).line.main}` })}
+        {...sliderProps}
+        sx={(theme) => ({
+          position: 'relative',
+          height,
+          borderBottom: `1px solid ${kit(theme).line.main}`,
+          ...(interactive && {
+            cursor: 'pointer',
+            borderRadius: '4px',
+            '&:focus-visible': { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: 4 },
+          }),
+        })}
       >
         {Array.from({ length: gridLines }, (_, i) => (
           <Box
@@ -77,34 +134,25 @@ export function BarChart({
             size="medium"
             sx={{ position: 'absolute', top: 0, left: `${pillLeft}%`, transform: 'translateX(-50%)', fontSize: '0.75rem' }}
           >
-            <span aria-live="polite">{formatSelected(selected, selectedIndex)}</span>
+            <span aria-hidden={interactive ? true : undefined}>{formatSelected(selected, selectedIndex)}</span>
           </Pill>
         )}
         <Box sx={{ position: 'absolute', left: 0, right: 0, bottom: 0, top: PILL_ROOM, display: 'flex', alignItems: 'flex-end', gap: '3px' }}>
           {data.map((d, i) => {
             const on = i === selectedIndex;
-            const barSx = (theme: Theme) => ({
-              flex: '1 1 0',
-              minWidth: 0,
-              height: Math.max(4, Math.round((d.value / max) * (plot - 4))),
-              borderRadius: '4px 4px 1px 1px',
-              bgcolor: on ? theme.palette.primary.main : kit(theme).chart.muted,
-              transition: theme.transitions.create('background-color', { duration: 120 }),
-            });
-            return onSelect ? (
-              <ButtonBase
+            return (
+              <Box
                 key={i}
-                aria-label={d.label}
-                aria-pressed={on}
-                onClick={() => onSelect(i)}
-                sx={(theme) => ({
-                  ...barSx(theme),
-                  '&:hover': { bgcolor: on ? theme.palette.primary.main : theme.palette.primary.light },
-                  '&.Mui-focusVisible': { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: 2 },
+                {...(interactive ? { 'aria-hidden': true } : { role: 'img', 'aria-label': d.label })}
+                sx={(theme: Theme) => ({
+                  flex: '1 1 0',
+                  minWidth: 0,
+                  height: Math.max(4, Math.round((d.value / max) * (plot - 4))),
+                  borderRadius: '4px 4px 1px 1px',
+                  bgcolor: on ? theme.palette.primary.main : kit(theme).chart.muted,
+                  transition: theme.transitions.create('background-color', { duration: 120 }),
                 })}
               />
-            ) : (
-              <Box key={i} role="img" aria-label={d.label} sx={barSx} />
             );
           })}
         </Box>

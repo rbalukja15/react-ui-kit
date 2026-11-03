@@ -1,6 +1,6 @@
 import * as React from 'react';
 import type { Preview } from '@storybook/react';
-import { ThemeProvider, CssBaseline } from '@mui/material';
+import { Box, ThemeProvider, CssBaseline } from '@mui/material';
 import { createAppTheme } from '../src/theme/theme';
 
 // Wrap every story in the library theme so Storybook doubles as living
@@ -29,7 +29,17 @@ const preview: Preview = {
       return (
         <ThemeProvider theme={createAppTheme(mode)}>
           <CssBaseline />
-          <Story />
+          {/* Paint the theme's page colour behind the story, so dark mode
+              reads correctly on Docs pages, whose canvas is always white. */}
+          <Box
+            sx={{
+              bgcolor: 'background.default',
+              color: 'text.primary',
+              ...(ctx.parameters.layout === 'fullscreen' ? {} : { p: 3, borderRadius: 1 }),
+            }}
+          >
+            <Story />
+          </Box>
         </ThemeProvider>
       );
     },

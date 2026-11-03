@@ -40,9 +40,9 @@ export function VetAppShell({ currentPath, children }: { currentPath: string; ch
       currentPath={currentPath}
       LinkComponent={DemoLink}
       brand={
-        <Typography sx={{ fontFamily: (t) => t.typography.h1.fontFamily, fontWeight: 600, fontSize: '1.25rem' }}>VetApp</Typography>
+        <Typography sx={{ fontWeight: 600, fontSize: '1.25rem' }}>VetApp</Typography>
       }
-      collapsedBrand={<Typography sx={{ fontFamily: (t) => t.typography.h1.fontFamily, fontWeight: 600 }}>V</Typography>}
+      collapsedBrand={<Typography sx={{ fontWeight: 600 }}>V</Typography>}
       drawerWidth={248}
     >
       <Box sx={{ maxWidth: 1120, display: 'flex', flexDirection: 'column', gap: 2.5, pb: 7 }}>{children}</Box>

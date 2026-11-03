@@ -76,8 +76,8 @@ export function Sidebar({
             border: '1px solid transparent',
             justifyContent: mini ? 'center' : 'flex-start',
             color: isCurrent ? (theme.palette.mode === 'light' ? 'primary.main' : 'primary.light') : 'text.primary',
-            bgcolor: isCurrent ? kit(theme).surface.card : 'transparent',
-            borderColor: isCurrent ? alpha(theme.palette.primary.main, 0.3) : 'transparent',
+            bgcolor: isCurrent ? alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.1 : 0.2) : 'transparent',
+            borderColor: 'transparent',
             '& .MuiListItemIcon-root': {
               color: isCurrent ? 'inherit' : 'text.secondary',
               minWidth: mini ? 0 : 32,
@@ -86,7 +86,9 @@ export function Sidebar({
             },
             '& .MuiListItemText-primary': { fontSize: '0.875rem', fontWeight: isCurrent ? 600 : 400 },
             '&:hover': {
-              bgcolor: isCurrent ? kit(theme).surface.card : alpha(theme.palette.text.primary, 0.04),
+              bgcolor: isCurrent
+                ? alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.14 : 0.26)
+                : alpha(theme.palette.text.primary, 0.05),
             },
             '&.Mui-focusVisible': { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: -2 },
           })}
@@ -141,26 +143,30 @@ export function Sidebar({
         // MUI 5 types `slotProps` without `paper` and passes the key on to
         // the Modal, which ignores it.
         {...({ slotProps: { paper: { role: 'dialog', 'aria-modal': true, 'aria-label': label } } } as object)}
-        sx={{
+        sx={(theme: Theme) => ({
           display: { xs: 'block', [breakpoint]: 'none' },
-          '& .MuiDrawer-paper': { width, boxSizing: 'border-box' },
-        }}
+          '& .MuiDrawer-paper': { width, boxSizing: 'border-box', bgcolor: kit(theme).surface.card },
+        })}
       >
         {renderContent(false)}
       </Drawer>
       <Drawer
         variant="permanent"
         open
-        sx={{
+        sx={(theme: Theme) => ({
           display: { xs: 'none', [breakpoint]: 'block' },
           '& .MuiDrawer-paper': {
             width: desktopWidth,
             boxSizing: 'border-box',
+            // A card-coloured rail with a firm edge, so it stands apart from
+            // the page instead of blending into it.
+            bgcolor: kit(theme).surface.card,
+            borderRight: `1px solid ${kit(theme).line.strong}`,
             // Keeps labels from peeking out while the width animates.
             overflowX: 'hidden',
             transition: animate ? widthTransition : 'none',
           },
-        }}
+        })}
       >
         {renderContent(collapsed)}
       </Drawer>
