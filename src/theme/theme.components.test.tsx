@@ -229,3 +229,12 @@ describe('MuiLink', () => {
     expect(style(screen.getByRole('link', { name: 'More' })).color).toBe(color(theme.palette.primary.light));
   });
 });
+
+describe('MuiCssBaseline', () => {
+  it.each(modes)('sets the colour scheme and scrollbar colour to %s', (mode) => {
+    const html = (createAppTheme(mode).components?.MuiCssBaseline?.styleOverrides as { html: Record<string, string> }).html;
+    expect(html.colorScheme).toBe(mode);
+    expect(html.scrollbarColor).toMatch(/ transparent$/);
+  });
+});
+

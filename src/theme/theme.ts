@@ -26,16 +26,40 @@ export interface ChartTokens {
   neutral: string;
 }
 
+/**
+ * The app shell's sidebar. It has its own colours so it can sit apart from
+ * the page: dark ink in both modes by default. Override these to bring back
+ * a light rail, e.g. `{ nav: { bg: '#FFFFFF', text: '#2A2722', … } }`.
+ */
+export interface NavTokens {
+  /** Drawer fill. */
+  bg: string;
+  /** Item labels and the brand. */
+  text: string;
+  /** Icons of items that are not the current page. */
+  muted: string;
+  /** Hover fill of items that are not the current page. */
+  hover: string;
+  /** Fill of the current page's item. */
+  activeBg: string;
+  /** Label and icon of the current page's item, and the focus ring. */
+  activeText: string;
+  /** Dividers and the drawer's edge. */
+  line: string;
+}
+
 declare module '@mui/material/styles' {
   interface Palette {
     surface: SurfaceTokens;
     line: LineTokens;
     chart: ChartTokens;
+    nav: NavTokens;
   }
   interface PaletteOptions {
     surface?: Partial<SurfaceTokens>;
     line?: Partial<LineTokens>;
     chart?: Partial<ChartTokens>;
+    nav?: Partial<NavTokens>;
   }
 }
 
@@ -89,9 +113,17 @@ const sharedComponents = (mode: PaletteMode) => ({
   // grows tall enough to need a vertical scrollbar doesn't shift the
   // whole layout sideways when it appears. No-op where the OS uses
   // overlay scrollbars.
+  // `color-scheme` and `scrollbar-color` follow the theme's mode rather
+  // than the OS, so native scrollbars and form controls never turn dark on
+  // a light page (or the other way round). `scrollbar-color` is inherited,
+  // so it reaches tables and other scroll areas too.
   MuiCssBaseline: {
     styleOverrides: {
-      html: { scrollbarGutter: 'stable' },
+      html: {
+        scrollbarGutter: 'stable',
+        colorScheme: mode,
+        scrollbarColor: `${mode === 'light' ? 'rgba(40,38,31,0.28)' : 'rgba(237,232,220,0.28)'} transparent`,
+      },
     },
   },
   // Flat buttons on three fixed heights (36 / 40 / 44). Outlined is the
@@ -189,6 +221,8 @@ const sharedComponents = (mode: PaletteMode) => ({
         borderBottomColor: theme.palette.line.soft,
         fontVariantNumeric: 'tabular-nums',
         padding: '10px 8px',
+        // A little tighter on phones, where every column fights for room.
+        [theme.breakpoints.down('sm')]: { padding: '10px 6px' },
       }),
       head: ({ theme }: { theme: Theme }) => ({
         borderBottomColor: theme.palette.line.main,
@@ -436,6 +470,16 @@ export function createAppTheme(mode: ThemeMode = 'light', overrides?: ThemeOverr
       chart: isLight
         ? { muted: '#CFE5E1', neutral: '#D9D5C8' }
         : { muted: '#2F4A46', neutral: '#4A453D' },
+      // Warm ink in light mode; a shade below the page in dark mode.
+      nav: {
+        bg: isLight ? '#23211D' : '#151411',
+        text: '#EDE8DC',
+        muted: '#A9A293',
+        hover: 'rgba(237,232,220,0.07)',
+        activeBg: 'rgba(46,148,136,0.26)',
+        activeText: '#9ED6CC',
+        line: 'rgba(237,232,220,0.09)',
+      },
     },
     typography: {
       fontFamily: fontStack,

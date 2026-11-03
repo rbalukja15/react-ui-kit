@@ -15,3 +15,12 @@ export default meta;
 
 export const Statistics: StoryObj = { render: () => <StatisticsScreen /> };
 export const Dashboard: StoryObj = { render: () => <DashboardScreen /> };
+
+// The same pages on a phone: the sidebar becomes an overlay, tiles go two
+// across and secondary table columns step aside.
+const phone = {
+  viewport: { defaultViewport: 'mobile2' },
+  chromatic: { viewports: [414] },
+};
+export const StatisticsOnPhone: StoryObj = { render: () => <StatisticsScreen />, parameters: phone };
+export const DashboardOnPhone: StoryObj = { render: () => <DashboardScreen />, parameters: phone };

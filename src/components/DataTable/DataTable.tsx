@@ -20,12 +20,17 @@ import {
   TableSortLabel,
   Typography,
 } from '@mui/material';
+import type { Breakpoint } from '@mui/material/styles';
 import { EmptyState } from '../EmptyState';
 import { RowActions } from '../RowActions';
 import { sortRows, type DataTableSort, type SortValue } from './sortRows';
 import { useControllable } from './useControllable';
 
 export type DataTableRowId = string | number;
+
+// `display` for a column with `hideBelow`, shared by its header and cells.
+const responsive = (column: { hideBelow?: Breakpoint }) =>
+  column.hideBelow ? { display: { xs: 'none', [column.hideBelow]: 'table-cell' } } : undefined;
 
 export interface DataTableColumn<Row> {
   /** Unique key. Also the row property shown and sorted by when `cell` and `sortValue` are left out. */
@@ -43,6 +48,11 @@ export interface DataTableColumn<Row> {
   width?: number | string;
   /** Whether the columns menu can hide it. Defaults to `true`. */
   hideable?: boolean;
+  /**
+   * Hides the column on screens narrower than this breakpoint, e.g. `'md'`
+   * keeps a sparkline or a secondary figure off phones.
+   */
+  hideBelow?: Breakpoint;
   /** Name for the columns menu when `header` is not a string. */
   menuLabel?: string;
 }
@@ -467,7 +477,7 @@ export function DataTable<Row>({
                   <TableCell
                     key={column.id}
                     align={column.align}
-                    sx={{ width: column.width }}
+                    sx={{ width: column.width, ...responsive(column) }}
                     aria-sort={column.sortable ? (active ? (direction === 'asc' ? 'ascending' : 'descending') : 'none') : undefined}
                   >
                     {column.sortable ? (
@@ -528,7 +538,7 @@ export function DataTable<Row>({
                       </TableCell>
                     )}
                     {visibleColumns.map((column) => (
-                      <TableCell key={column.id} align={column.align}>
+                      <TableCell key={column.id} align={column.align} sx={responsive(column)}>
                         {column.cell ? column.cell(row) : defaultCell(readProperty(row, column.id))}
                       </TableCell>
                     ))}

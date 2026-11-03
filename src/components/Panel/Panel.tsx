@@ -75,7 +75,7 @@ export function Panel({
             bgcolor: kit(theme).surface.card,
             border: `1px solid ${kit(theme).line.soft}`,
             borderRadius: '12px',
-            p: '18px',
+            p: { xs: '14px', sm: '18px' },
             height: '100%',
             boxSizing: 'border-box',
             display: 'flex',

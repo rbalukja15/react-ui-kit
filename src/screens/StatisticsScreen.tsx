@@ -113,16 +113,18 @@ const columns: DataTableColumn<Product>[] = [
     id: 'weeks',
     header: 'Last 12 weeks',
     hideable: false,
+    hideBelow: 'md',
     cell: (p) => <Sparkline values={p.weeks} aria-label={`Weekly sales, last 12 weeks: ${p.weeks.join(', ')}`} />,
   },
   {
     id: 'units',
     header: 'Sold',
     align: 'right',
+    hideBelow: 'sm',
     cell: (p) => <TwoLineCell align="right" strong primary={p.units} secondary={`Sep: ${p.prev}`} />,
   },
   { id: 'revenue', header: 'Revenue', align: 'right', sortable: true, cell: (p) => fmt(p.revenue) },
-  { id: 'profit', header: 'Profit', align: 'right', sortable: true, cell: (p) => fmt(p.profit) },
+  { id: 'profit', header: 'Profit', align: 'right', sortable: true, hideBelow: 'md', cell: (p) => fmt(p.profit) },
   {
     id: 'stock',
     header: 'In stock',
@@ -165,7 +167,7 @@ export function StatisticsScreen() {
         }
       />
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 1.5 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(4, minmax(0, 1fr))' }, gap: 1.5 }}>
         <StatTile
           label="Revenue"
           icon={<ReceiptIcon />}
@@ -191,7 +193,7 @@ export function StatisticsScreen() {
         </StatTile>
       </Box>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 1.5 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(340px, 100%), 1fr))', gap: 1.5 }}>
         <Panel title="Revenue by day" icon={<ChartIcon />} action={<Box component="span" sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>Pick a day</Box>}>
           <BarChart
             aria-label="Revenue by day, October 2026"
@@ -206,12 +208,22 @@ export function StatisticsScreen() {
           {categories.map(([name, revenue, profit]) => (
             <Box
               key={name}
-              sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.3fr) minmax(0, 1fr) 84px 40px', alignItems: 'center', gap: 1.5, py: '7px', fontSize: '0.875rem' }}
+              sx={{
+                display: 'grid',
+                // Phones put the meter on its own line under the figures.
+                gridTemplateColumns: { xs: 'minmax(0, 1fr) auto 40px', sm: 'minmax(0, 1.3fr) minmax(0, 1fr) 84px 40px' },
+                gridTemplateAreas: { xs: '"name revenue margin" "bar bar bar"', sm: '"name bar revenue margin"' },
+                alignItems: 'center',
+                columnGap: 1.5,
+                rowGap: 0.75,
+                py: '7px',
+                fontSize: '0.875rem',
+              }}
             >
-              <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</Box>
-              <Meter value={revenue} max={maxCategory} aria-label={`${name} revenue`} valueText={`${fmt(revenue)} L`} />
-              <Box component="span" sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(revenue)}</Box>
-              <Box component="span" sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'text.secondary' }}>
+              <Box component="span" sx={{ gridArea: 'name', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</Box>
+              <Meter value={revenue} max={maxCategory} aria-label={`${name} revenue`} valueText={`${fmt(revenue)} L`} sx={{ gridArea: 'bar' }} />
+              <Box component="span" sx={{ gridArea: 'revenue', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(revenue)}</Box>
+              <Box component="span" sx={{ gridArea: 'margin', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'text.secondary' }}>
                 {Math.round((profit * 100) / revenue)}%
               </Box>
             </Box>
@@ -223,8 +235,8 @@ export function StatisticsScreen() {
         title={<>Products <Pill>84</Pill></>}
         icon={<ListIcon />}
         action={
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
-            <SearchField label="Search products" placeholder="Name or barcode" value={query} onChange={setQuery} />
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', flex: { xs: '1 1 100%', sm: '0 1 auto' } }}>
+            <SearchField label="Search products" placeholder="Name or barcode" value={query} onChange={setQuery} fullWidth sx={{ flex: '1 1 200px' }} />
             <Button variant="outlined" startIcon={<DownloadIcon />}>
               Export CSV
             </Button>

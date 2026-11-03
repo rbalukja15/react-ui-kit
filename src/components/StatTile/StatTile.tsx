@@ -30,8 +30,8 @@ export interface StatTileProps {
  */
 export function StatTile({ label, icon, value, unit, aside, note, children, sx }: StatTileProps) {
   return (
-    <Panel aria-label={label} landmark={false} sx={sx} contentSx={{ p: '16px 18px', gap: 1.25 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, minHeight: 22 }}>
+    <Panel aria-label={label} landmark={false} sx={sx} contentSx={{ p: { xs: '14px', sm: '16px 18px' }, gap: 1.25 }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 1, minHeight: 22 }}>
         <PanelLabel icon={icon}>{label}</PanelLabel>
         {typeof aside === 'string' ? (
           <Typography component="span" sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
@@ -44,7 +44,7 @@ export function StatTile({ label, icon, value, unit, aside, note, children, sx }
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75, flexWrap: 'wrap' }}>
         <Typography
           component="span"
-          sx={{ fontSize: '1.75rem', fontWeight: 600, lineHeight: 1.15, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}
+          sx={{ fontSize: { xs: '1.375rem', sm: '1.75rem' }, fontWeight: 600, lineHeight: 1.15, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}
         >
           {value}
         </Typography>

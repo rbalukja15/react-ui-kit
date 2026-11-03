@@ -371,4 +371,32 @@ describe('<DataTable>', () => {
     const region = screen.getByRole('region', { name: 'People' });
     expect(region).toHaveAttribute('tabindex', '0');
   });
+
+  it('keeps hideBelow columns in the table but hides them on small screens', () => {
+    render(
+      <DataTable
+        label="People"
+        rows={people}
+        columns={[...columns.slice(0, 2), { ...columns[2]!, hideBelow: 'xl' }]}
+        getRowId={(p) => p.id}
+      />,
+    );
+    // jsdom doesn't evaluate media queries, so read the generated CSS: the
+    // cell is hidden by default and shown again from the breakpoint up.
+    const css = (el: Element) => {
+      const classes = [...el.classList].filter((c) => c.startsWith('css-'));
+      return [...document.querySelectorAll('style')]
+        .map((s) => s.textContent ?? '')
+        .join('')
+        .split('}')
+        .filter((rule) => classes.some((c) => rule.includes(c)))
+        .join('}');
+    };
+    const header = screen.getByRole('columnheader', { name: 'City' });
+    expect(css(header)).toMatch(/display:\s*none/);
+    expect(css(header)).toMatch(/min-width:\s*1536px/);
+    expect(css(screen.getByText('London').closest('td')!)).toMatch(/display:\s*none/);
+    expect(css(screen.getByRole('columnheader', { name: /Age/ }))).not.toMatch(/display:\s*none/);
+  });
 });
+

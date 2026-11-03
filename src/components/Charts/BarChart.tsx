@@ -162,8 +162,13 @@ export function BarChart({
   );
 }
 
-/** Tick labels under a chart: spread edge to edge, or one centred under each bar. */
+/**
+ * Tick labels under a chart: spread edge to edge, or one centred under each
+ * bar. More than eight per-bar labels keep only every other one on phones,
+ * so neighbours don't run into each other.
+ */
 export function AxisLabels({ labels, spread = false }: { labels: readonly React.ReactNode[]; spread?: boolean }) {
+  const thin = !spread && labels.length > 8;
   return (
     <Box
       aria-hidden="true"
@@ -177,7 +182,21 @@ export function AxisLabels({ labels, spread = false }: { labels: readonly React.
       }}
     >
       {labels.map((label, i) => (
-        <Box component="span" key={i} sx={spread ? undefined : { flex: '1 1 0', minWidth: 0, textAlign: 'center' }}>
+        <Box
+          component="span"
+          key={i}
+          sx={
+            spread
+              ? undefined
+              : {
+                  flex: '1 1 0',
+                  minWidth: 0,
+                  textAlign: 'center',
+                  whiteSpace: 'nowrap',
+                  ...(thin && i % 2 === 1 && { visibility: { xs: 'hidden', sm: 'visible' } }),
+                }
+          }
+        >
           {label}
         </Box>
       ))}

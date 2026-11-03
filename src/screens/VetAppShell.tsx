@@ -43,6 +43,8 @@ export function VetAppShell({ currentPath, children }: { currentPath: string; ch
         <Typography sx={{ fontWeight: 600, fontSize: '1.25rem' }}>VetApp</Typography>
       }
       collapsedBrand={<Typography sx={{ fontWeight: 600 }}>V</Typography>}
+      // Phones hide the sidebar, so the header carries the app name there.
+      title={<Box component="span" sx={{ display: { md: 'none' }, fontWeight: 600 }}>VetApp</Box>}
       drawerWidth={248}
     >
       <Box sx={{ maxWidth: 1120, display: 'flex', flexDirection: 'column', gap: 2.5, pb: 7 }}>{children}</Box>

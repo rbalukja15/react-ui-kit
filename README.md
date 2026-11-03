@@ -98,9 +98,9 @@ const brand: ThemeOverrides = (mode) => ({
 
 `overrides` is either a MUI `ThemeOptions` object or a function of the mode. A palette colour you pass (`primary`, `secondary`, `success`, `warning`, `error`, `info`) replaces the default one, so MUI derives `light`, `dark` and `contrastText` from your `main`. The same argument works without the provider: `createAppTheme('dark', brand)`.
 
-### Surface, line and chart tokens
+### Surface, line, chart and nav tokens
 
-Besides MUI's palette, the theme carries three token groups that the dashboard components (`Panel`, `StatTile`, `Pill`, the charts, `ListRow`) read. Override them like any palette key:
+Besides MUI's palette, the theme carries four token groups that the dashboard components (`Panel`, `StatTile`, `Pill`, the charts, `ListRow`) and the `AppShell` sidebar read. Override them like any palette key:
 
 | Token | Default (light) | Used for |
 | --- | --- | --- |
@@ -109,14 +109,28 @@ Besides MUI's palette, the theme carries three token groups that the dashboard c
 | `palette.surface.track` | `#EDEBE3` | Meter tracks and count pills |
 | `palette.line.soft` / `main` / `strong` | `rgba(40,38,31,…)` at 6%, 10%, 14% | Row separators, axes, control outlines |
 | `palette.chart.muted` / `neutral` | `#CFE5E1`, `#D9D5C8` | Unselected bars, a neutral series beside primary |
+| `palette.nav.bg` / `text` / `muted` | `#23211D`, `#EDE8DC`, `#A9A293` | The sidebar: a dark rail in both modes (`#151411` in dark mode) |
+| `palette.nav.activeBg` / `activeText` / `hover` / `line` | teal tint, `#9ED6CC`, … | The current page's item, its focus ring, hover and dividers |
 
 ```tsx
 const brand: ThemeOverrides = {
   palette: { primary: { main: '#5B2CC9' }, chart: { muted: '#DDD3FA' } },
 };
+
+// A light sidebar instead of the dark one.
+const lightRail: ThemeOverrides = (mode) => mode === 'light' ? {
+  palette: {
+    nav: {
+      bg: '#FFFFFF', text: '#2A2722', muted: '#6F6A5C', hover: 'rgba(40,38,31,0.05)',
+      activeBg: 'rgba(15,118,110,0.1)', activeText: '#0f766e', line: 'rgba(40,38,31,0.14)',
+    },
+  },
+} : {};
 ```
 
-The components fall back to values derived from the standard palette under a plain MUI theme. Storybook's "Screens/VetApp" section shows a statistics page and a dashboard built only from kit components.
+The theme also sets `color-scheme` and a matching `scrollbar-color` on `<html>` from the mode, so native scrollbars and form controls follow the app's light or dark mode rather than the operating system's.
+
+The components fall back to values derived from the standard palette under a plain MUI theme. Storybook's "Screens/VetApp" section shows a statistics page and a dashboard built only from kit components, on desktop and on a phone.
 
 ### Light, dark and system mode
 

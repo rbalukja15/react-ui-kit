@@ -7,7 +7,7 @@ export interface TwoLineCellProps {
   primary: React.ReactNode;
   /** Small grey second line. */
   secondary?: React.ReactNode;
-  /** Outline icon shown in a small rounded tile before the text. */
+  /** Outline icon shown in a small rounded tile before the text. Hidden on phones, where the column needs the room. */
   icon?: React.ReactNode;
   /** `right` for figures: `57 bottles` over `Sep: 61`. Defaults to `'left'`. */
   align?: 'left' | 'right';
@@ -41,7 +41,7 @@ export function TwoLineCell({ primary, secondary, icon, align = 'left', strong =
           border: `1px solid ${kit(theme).line.strong}`,
           bgcolor: 'background.paper',
           color: 'text.secondary',
-          display: 'inline-flex',
+          display: { xs: 'none', sm: 'inline-flex' },
           alignItems: 'center',
           justifyContent: 'center',
           '& > svg': { width: 18, height: 18 },

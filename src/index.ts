@@ -27,7 +27,7 @@ export * from './components/TwoLineCell';
 
 // Theme
 export { createAppTheme } from './theme/theme';
-export type { ChartTokens, LineTokens, SurfaceTokens, ThemeMode, ThemeOverrides } from './theme/theme';
+export type { ChartTokens, LineTokens, NavTokens, SurfaceTokens, ThemeMode, ThemeOverrides } from './theme/theme';
 export { ThemeModeProvider, useThemeMode } from './theme/ThemeModeContext';
 export type {
   ThemeModeContextValue,

@@ -3,7 +3,7 @@ import { Box, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 
 export interface PageHeaderProps {
-  /** The page's `<h1>`, set in the display face. */
+  /** The page's `<h1>`. */
   title: React.ReactNode;
   /** One grey line under the title. */
   subtitle?: React.ReactNode;

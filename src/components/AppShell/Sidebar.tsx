@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Box, Divider, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Tooltip } from '@mui/material';
-import { alpha, type Theme } from '@mui/material/styles';
+import { alpha, getLuminance, type Theme } from '@mui/material/styles';
 import { findActiveIndex, navItemKey, type IsNavItemActive, type NavItem, type ShellBreakpoint } from './navItems';
 import { kit } from '../../internal/kitTokens';
 
@@ -28,6 +28,28 @@ const widthTransition = (theme: Theme) =>
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.enteringScreen,
   });
+
+/**
+ * The drawer's own colours from the `nav` tokens. `color-scheme` follows the
+ * fill, so a dark rail on a light page gets dark scrollbars.
+ */
+const navPaper = (theme: Theme) => {
+  const nav = kit(theme).nav;
+  let dark = theme.palette.mode === 'dark';
+  let thumb = nav.line;
+  try {
+    dark = getLuminance(nav.bg) < 0.4;
+    thumb = alpha(nav.text, 0.25);
+  } catch {
+    // A CSS variable or other colour MUI can't parse: keep the mode's defaults.
+  }
+  return {
+    bgcolor: nav.bg,
+    color: nav.text,
+    colorScheme: dark ? 'dark' : 'light',
+    scrollbarColor: `${thumb} transparent`,
+  };
+};
 
 /**
  * The navigation drawer: a temporary overlay below `breakpoint`, a permanent
@@ -69,29 +91,26 @@ export function Sidebar({
           }}
           aria-current={isCurrent ? 'page' : undefined}
           aria-label={mini ? item.label : undefined}
-          sx={(theme: Theme) => ({
-            borderRadius: '10px',
-            px: mini ? 1 : 1.5,
-            py: 1,
-            border: '1px solid transparent',
-            justifyContent: mini ? 'center' : 'flex-start',
-            color: isCurrent ? (theme.palette.mode === 'light' ? 'primary.main' : 'primary.light') : 'text.primary',
-            bgcolor: isCurrent ? alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.1 : 0.2) : 'transparent',
-            borderColor: 'transparent',
-            '& .MuiListItemIcon-root': {
-              color: isCurrent ? 'inherit' : 'text.secondary',
-              minWidth: mini ? 0 : 32,
+          sx={(theme: Theme) => {
+            const nav = kit(theme).nav;
+            return {
+              borderRadius: '10px',
+              px: mini ? 1 : 1.5,
+              py: 1,
               justifyContent: mini ? 'center' : 'flex-start',
-              '& svg': { fontSize: '1.25rem' },
-            },
-            '& .MuiListItemText-primary': { fontSize: '0.875rem', fontWeight: isCurrent ? 600 : 400 },
-            '&:hover': {
-              bgcolor: isCurrent
-                ? alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.14 : 0.26)
-                : alpha(theme.palette.text.primary, 0.05),
-            },
-            '&.Mui-focusVisible': { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: -2 },
-          })}
+              color: isCurrent ? nav.activeText : nav.text,
+              bgcolor: isCurrent ? nav.activeBg : 'transparent',
+              '& .MuiListItemIcon-root': {
+                color: isCurrent ? 'inherit' : nav.muted,
+                minWidth: mini ? 0 : 32,
+                justifyContent: mini ? 'center' : 'flex-start',
+                '& svg': { fontSize: '1.25rem' },
+              },
+              '& .MuiListItemText-primary': { fontSize: '0.875rem', fontWeight: isCurrent ? 600 : 400 },
+              '&:hover': { bgcolor: isCurrent ? nav.activeBg : nav.hover },
+              '&.Mui-focusVisible': { outline: `2px solid ${nav.activeText}`, outlineOffset: -2 },
+            };
+          }}
         >
           <ListItemIcon>{item.icon}</ListItemIcon>
           {!mini && <ListItemText primary={item.label} />}
@@ -109,7 +128,7 @@ export function Sidebar({
           <Toolbar sx={{ justifyContent: mini ? 'center' : 'flex-start', px: mini ? 1 : 2.5, gap: 1.5 }}>
             {mini ? collapsedBrand : brand}
           </Toolbar>
-          <Divider />
+          <Divider sx={(theme: Theme) => ({ borderColor: kit(theme).nav.line })} />
         </>
       )}
       <Box sx={{ flexGrow: 1, overflowY: 'auto', overflowX: 'hidden' }}>
@@ -117,7 +136,7 @@ export function Sidebar({
       </Box>
       {footerItems && footerItems.length > 0 && (
         <>
-          <Divider />
+          <Divider sx={(theme: Theme) => ({ borderColor: kit(theme).nav.line })} />
           <List sx={{ px: 1, py: 1 }}>{footerItems.map((item, i) => renderItem(item, i === footerActive, mini))}</List>
         </>
       )}
@@ -145,7 +164,7 @@ export function Sidebar({
         {...({ slotProps: { paper: { role: 'dialog', 'aria-modal': true, 'aria-label': label } } } as object)}
         sx={(theme: Theme) => ({
           display: { xs: 'block', [breakpoint]: 'none' },
-          '& .MuiDrawer-paper': { width, boxSizing: 'border-box', bgcolor: kit(theme).surface.card },
+          '& .MuiDrawer-paper': { width, boxSizing: 'border-box', ...navPaper(theme) },
         })}
       >
         {renderContent(false)}
@@ -158,10 +177,8 @@ export function Sidebar({
           '& .MuiDrawer-paper': {
             width: desktopWidth,
             boxSizing: 'border-box',
-            // A card-coloured rail with a firm edge, so it stands apart from
-            // the page instead of blending into it.
-            bgcolor: kit(theme).surface.card,
-            borderRight: `1px solid ${kit(theme).line.strong}`,
+            ...navPaper(theme),
+            borderRight: `1px solid ${kit(theme).nav.line}`,
             // Keeps labels from peeking out while the width animates.
             overflowX: 'hidden',
             transition: animate ? widthTransition : 'none',

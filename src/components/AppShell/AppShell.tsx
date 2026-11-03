@@ -186,6 +186,10 @@ export function AppShell({
       sx={{
         display: 'flex',
         minHeight: '100vh',
+        // Paint the theme's page colour here too, so the shell reads right
+        // even when the host page's body keeps its own background.
+        bgcolor: 'background.default',
+        color: 'text.primary',
         // The visible height on mobile browsers whose address bar collapses.
         '@supports (min-height: 100dvh)': { minHeight: '100dvh' },
       }}

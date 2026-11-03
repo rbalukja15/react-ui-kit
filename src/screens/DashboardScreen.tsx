@@ -110,13 +110,13 @@ export function DashboardScreen() {
         }
       />
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 1.5 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(4, minmax(0, 1fr))' }, gap: 1.5 }}>
         {tiles.map((t) => (
           <StatTile key={t.label} {...t} />
         ))}
       </Box>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 1.5 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: 1.5 }}>
         <Panel title="Vaccinations due" icon={<SyringeIcon />} action={<Pill tone="warning">4 overdue</Pill>} contentSx={{ gap: 1 }}>
           <DueList rows={vaccinations} />
           {footLink('All 23 in follow-ups')}
@@ -179,7 +179,7 @@ export function DashboardScreen() {
         </Box>
       </Panel>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 1.5 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: 1.5 }}>
         <Panel
           title="Today"
           icon={<ClockIcon />}
