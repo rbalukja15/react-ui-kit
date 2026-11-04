@@ -3,6 +3,7 @@ import { Box } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { Pill } from '../Pill';
 import { kit } from '../../internal/kitTokens';
+import { maxOf } from '../../internal/maxOf';
 
 export interface BarDatum {
   /** Read by screen readers for this bar, e.g. `'Sat 17 Oct, 42,310 L'`. */
@@ -20,6 +21,8 @@ export interface BarChartProps {
   onSelect?: (index: number) => void;
   /** Text of the pill above the selected bar. Defaults to the bar's `label`. */
   formatSelected?: (datum: BarDatum, index: number) => React.ReactNode;
+  /** Read by screen readers while no bar is picked. Defaults to `'No bar selected'`. */
+  noneSelectedText?: string;
   /** Labels spread evenly under the chart, e.g. `['1 Oct', '8', '15', '22', '31 Oct']`. */
   axisLabels?: readonly React.ReactNode[];
   /** Plot height in px, pill included. Defaults to `172`. */
@@ -45,12 +48,13 @@ export function BarChart({
   selectedIndex,
   onSelect,
   formatSelected = (d) => d.label,
+  noneSelectedText = 'No bar selected',
   axisLabels,
   height = 172,
   gridLines = 2,
   sx,
 }: BarChartProps) {
-  const max = Math.max(0, ...data.map((d) => d.value)) || 1;
+  const max = maxOf(data.map((d) => d.value)) || 1;
   const plot = height - PILL_ROOM;
   const selected = selectedIndex !== undefined ? data[selectedIndex] : undefined;
   const pillLeft = selectedIndex !== undefined ? Math.min(88, Math.max(12, ((selectedIndex + 0.5) * 100) / data.length)) : 0;
@@ -93,8 +97,10 @@ export function BarChart({
         'aria-label': ariaLabel,
         'aria-valuemin': 0,
         'aria-valuemax': count - 1,
+        // A slider must have aria-valuenow, so with nothing picked it reports
+        // 0, and the text tells screen readers that no bar is chosen.
         'aria-valuenow': selectedIndex ?? 0,
-        'aria-valuetext': selected ? selected.label : undefined,
+        'aria-valuetext': selected ? selected.label : noneSelectedText,
         onKeyDown,
         onClick,
       }

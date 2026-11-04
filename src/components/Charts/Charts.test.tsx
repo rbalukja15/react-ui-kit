@@ -29,6 +29,16 @@ describe('<BarChart>', () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
+  it('says no bar is selected until one is picked', async () => {
+    const onSelect = vi.fn();
+    render(<BarChart aria-label="Revenue by day" data={data} onSelect={onSelect} />);
+    const slider = screen.getByRole('slider', { name: 'Revenue by day' });
+    expect(slider).toHaveAttribute('aria-valuetext', 'No bar selected');
+    slider.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(onSelect).toHaveBeenCalledWith(0);
+  });
+
   it('draws plain labelled bars when not selectable', () => {
     render(<BarChart aria-label="Revenue" data={data} />);
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
@@ -52,6 +62,26 @@ describe('<StackedBarChart> and <ChartLegend>', () => {
     expect(screen.getByRole('img', { name: 'October: cost 4, profit 6' })).toBeInTheDocument();
     expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Cost', 'Profit']);
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it('draws negative parts as empty and leaves them out of the scale', () => {
+    const { container } = render(
+      <StackedBarChart
+        aria-label="Cost and profit"
+        series={[{ label: 'Cost' }, { label: 'Profit' }]}
+        data={[
+          { label: 'Sep', 'aria-label': 'September: cost 10, loss 4', values: [10, -4] },
+          { label: 'Oct', 'aria-label': 'October: cost 5, profit 5', values: [5, 5] },
+        ]}
+      />,
+    );
+    const heights = [...container.querySelectorAll('[role="img"]')].map((bar) =>
+      [...bar.children].map((part) => getComputedStyle(part).height),
+    );
+    expect(heights).toEqual([
+      ['100%', '0%'],
+      ['50%', '50%'],
+    ]);
   });
 });
 

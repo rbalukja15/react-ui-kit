@@ -61,6 +61,22 @@ describe('<Meter>', () => {
     const meter = screen.getByRole('meter', { name: 'Margin' });
     expect(meter).toHaveAttribute('aria-valuenow', '100');
     expect(meter).toHaveAttribute('aria-valuetext', '140%');
+    expect(getComputedStyle(meter.firstElementChild!).width).toBe('100%');
+  });
+
+  it('keeps the fill inside the bar for values outside the range', () => {
+    withKit(
+      <>
+        <Meter value={-20} aria-label="Low" />
+        <Meter value={30} min={10} max={50} aria-label="Middle" />
+        <Meter value={5} min={5} max={5} aria-label="Empty range" />
+      </>,
+    );
+    const fill = (name: string) => getComputedStyle(screen.getByRole('meter', { name }).firstElementChild!).width;
+    expect(screen.getByRole('meter', { name: 'Low' })).toHaveAttribute('aria-valuenow', '0');
+    expect(fill('Low')).toBe('0%');
+    expect(fill('Middle')).toBe('50%');
+    expect(fill('Empty range')).toBe('0%');
   });
 
   it('can be named by a visible label instead', () => {

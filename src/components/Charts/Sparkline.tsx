@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Box } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { kit } from '../../internal/kitTokens';
+import { maxOf } from '../../internal/maxOf';
 
 export interface SparklineProps {
   /** Counts or amounts, zero or more. Negative values draw as empty (3px) bars. */
@@ -19,9 +20,7 @@ export interface SparklineProps {
 
 /** A tiny bar chart that fits in a table cell, such as 12 weeks of sales. */
 export function Sparkline({ values, 'aria-label': ariaLabel, highlightIndex, width = 120, height = 26, sx }: SparklineProps) {
-  // `reduce` rather than spreading into Math.max, which overflows the call
-  // stack on very long arrays.
-  const max = values.reduce((m, v) => (v > m ? v : m), 0) || 1;
+  const max = maxOf(values) || 1;
   const highlight = highlightIndex === undefined ? values.length - 1 : highlightIndex;
   return (
     <Box

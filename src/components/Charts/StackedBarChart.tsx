@@ -3,6 +3,7 @@ import { Box } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { AxisLabels } from './BarChart';
 import { kit } from '../../internal/kitTokens';
+import { maxOf } from '../../internal/maxOf';
 
 export interface ChartSeries {
   label: string;
@@ -15,7 +16,7 @@ export interface StackedBarDatum {
   label: React.ReactNode;
   /** Read by screen readers, e.g. `'October: cost 466,325 L, profit 617,995 L'`. */
   'aria-label': string;
-  /** One value per series, bottom to top. */
+  /** One value per series, bottom to top. Negative values are drawn as 0. */
   values: readonly number[];
 }
 
@@ -31,7 +32,7 @@ export interface StackedBarChartProps {
 
 /** Bars split into stacked parts, such as cost under profit. Pair it with `ChartLegend`. */
 export function StackedBarChart({ series, data, 'aria-label': ariaLabel, height = 190, sx }: StackedBarChartProps) {
-  const max = Math.max(0, ...data.map((d) => d.values.reduce((a, b) => a + b, 0))) || 1;
+  const max = maxOf(data.map((d) => d.values.reduce((sum, v) => sum + Math.max(0, v), 0))) || 1;
 
   return (
     <Box sx={[{ display: 'flex', flexDirection: 'column', gap: 1 }, ...(Array.isArray(sx) ? sx : [sx])]}>
@@ -53,7 +54,7 @@ export function StackedBarChart({ series, data, 'aria-label': ariaLabel, height 
                 <Box
                   key={s}
                   sx={(theme) => ({
-                    height: `${(v / max) * 100}%`,
+                    height: `${(Math.max(0, v) / max) * 100}%`,
                     bgcolor: seriesColor(theme, series, s),
                     borderRadius: top ? '4px 4px 0 0' : 0,
                   })}
