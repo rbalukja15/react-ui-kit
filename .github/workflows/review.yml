@@ -17,7 +17,9 @@ jobs:
   # as one comment. It reviews once per PR; re-run the job from the Actions
   # tab to review again after new pushes.
   ponytail:
-    if: github.event.pull_request.draft == false && github.actor != 'dependabot[bot]'
+    # Skips PRs opened by bots (Dependabot, release PRs): the action refuses
+    # bot actors, and version bumps need no review.
+    if: github.event.pull_request.draft == false && github.event.pull_request.user.type != 'Bot'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
