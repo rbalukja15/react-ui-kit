@@ -23,7 +23,10 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+      - id: start
+        run: echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
       - uses: anthropics/claude-code-action@v1
+        id: review
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # Comments come from github-actions[bot] instead of a separate app.
@@ -31,14 +34,40 @@ jobs:
           include_fix_links: false
           plugin_marketplaces: https://github.com/DietrichGebert/ponytail.git
           plugins: ponytail@ponytail
+          # The report file must sit inside the checkout: writes outside the
+          # working directory are blocked in a non-interactive run.
           prompt: |
             Use the ponytail-review skill to review pull request #${{ github.event.pull_request.number }}
             in ${{ github.repository }}. The change is the diff between origin/${{ github.base_ref }} and HEAD;
             read `gh pr view ${{ github.event.pull_request.number }}` for its description.
 
-            Post the full report as a single comment with
-            `gh pr comment ${{ github.event.pull_request.number }} --body-file <file>`.
+            Write the full report to `review-comment.md` in the current directory, then post it
+            with exactly this command: `gh pr comment ${{ github.event.pull_request.number }} --body-file review-comment.md`
             The comment is the report only: no title naming a tool, no signature,
             no footer, no links to any website.
           claude_args: >-
-            --allowedTools "Read,Grep,Glob,Write,Skill,Bash(git diff:*),Bash(git log:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*)"
+            --allowedTools "Read,Grep,Glob,Write,Skill,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*)"
+      # The action passes even when the review never gets posted, so check
+      # for the report (every ponytail report opens with "What this change
+      # does:") and list any blocked tool calls to show why.
+      - name: Check the review was posted
+        if: steps.review.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STARTED: ${{ steps.start.outputs.at }}
+          EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          posted=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+            --jq "[.[] | select(.user.login == \"github-actions[bot]\" and .created_at >= \"$STARTED\" and (.body | contains(\"What this change does:\")))] | length" \
+            | awk '{ n += $1 } END { print n + 0 }')
+          if [ "$posted" -gt 0 ]; then
+            echo "Review posted."
+            exit 0
+          fi
+          echo "::error::The review ran but posted no comment."
+          if [ -f "$EXECUTION_FILE" ]; then
+            echo "Blocked tool calls:"
+            jq -c '.. | objects | select(has("permission_denials")) | .permission_denials[]? | {tool: .tool_name, input: .tool_input}' "$EXECUTION_FILE" || true
+          fi
+          exit 1
