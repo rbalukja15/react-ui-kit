@@ -12,6 +12,8 @@ export interface ListRowProps {
   secondary?: React.ReactNode;
   /** Fixed-width slot before the text, such as a time. */
   leading?: React.ReactNode;
+  /** Width of the `leading` slot, so a column of times lines up. Defaults to `44` (fits `09:30`); use more for `10:30 AM`. */
+  leadingWidth?: number | string;
   /** Right-aligned status or figure. */
   trailing?: React.ReactNode;
   /** Colour of a text `trailing`. `warning` and `error` are bold. Defaults to `'muted'`. */
@@ -43,6 +45,7 @@ export function ListRow({
   meta,
   secondary,
   leading,
+  leadingWidth = 44,
   trailing,
   trailingTone = 'muted',
   href,
@@ -72,7 +75,7 @@ export function ListRow({
       ]}
     >
       {leading !== undefined && (
-        <Box sx={{ width: 44, flex: 'none', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{leading}</Box>
+        <Box sx={{ width: leadingWidth, flex: 'none', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{leading}</Box>
       )}
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Box className="ListRow-primary" sx={{ fontWeight: secondary !== undefined ? 500 : 400 }}>

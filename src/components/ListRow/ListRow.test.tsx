@@ -27,4 +27,9 @@ describe('<SummaryList>', () => {
     expect(screen.getByText('405 L').tagName).toBe('DD');
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it('widens the leading slot with leadingWidth', () => {
+    render(<ListRow leading="10:30 AM" leadingWidth={72} primary="Rex" />);
+    expect(getComputedStyle(screen.getByText('10:30 AM')).width).toBe('72px');
+  });
 });

@@ -5,14 +5,21 @@ import { ChevronDownIcon } from '../../internal/outlineIcons';
 export interface DropdownButtonProps extends Omit<ButtonProps, 'variant' | 'endIcon' | 'startIcon'> {
   /** Leading outline icon, such as a calendar for a date range. */
   icon?: React.ReactNode;
-  /** Set while its menu or picker is open; drives `aria-expanded`. */
+  /**
+   * Whether its menu or picker is open; drives `aria-expanded`. Pass it
+   * (`false` when closed) so screen readers can tell the state.
+   */
   open?: boolean;
 }
 
 /**
  * An outlined button with a chevron that opens a menu or picker: a date
  * range (`1 – 31 Oct 2026`), a period (`Last 12 months`). Wire `onClick` to
- * your own `Menu`, `Popover` or date picker.
+ * your own `Menu`, `Popover` or date picker, and pass `open` alongside it:
+ *
+ * ```tsx
+ * <DropdownButton open={Boolean(anchor)} onClick={(e) => setAnchor(e.currentTarget)}>Last 12 months</DropdownButton>
+ * ```
  */
 export const DropdownButton = /* @__PURE__ */ React.forwardRef<HTMLButtonElement, DropdownButtonProps>(function DropdownButton(
   { icon, open, children, ...props },

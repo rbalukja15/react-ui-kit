@@ -4,6 +4,7 @@ import type { SxProps, Theme } from '@mui/material/styles';
 import { kit } from '../../internal/kitTokens';
 
 export interface SparklineProps {
+  /** Counts or amounts, zero or more. Negative values draw as empty (3px) bars. */
   values: readonly number[];
   /** Accessible name, ideally with the values: `'Weekly sales, last 12 weeks: 2, 3, 2, …'`. */
   'aria-label': string;
@@ -18,7 +19,9 @@ export interface SparklineProps {
 
 /** A tiny bar chart that fits in a table cell, such as 12 weeks of sales. */
 export function Sparkline({ values, 'aria-label': ariaLabel, highlightIndex, width = 120, height = 26, sx }: SparklineProps) {
-  const max = Math.max(0, ...values) || 1;
+  // `reduce` rather than spreading into Math.max, which overflows the call
+  // stack on very long arrays.
+  const max = values.reduce((m, v) => (v > m ? v : m), 0) || 1;
   const highlight = highlightIndex === undefined ? values.length - 1 : highlightIndex;
   return (
     <Box
@@ -31,7 +34,7 @@ export function Sparkline({ values, 'aria-label': ariaLabel, highlightIndex, wid
           key={i}
           sx={(theme) => ({
             flex: '1 1 0',
-            height: Math.max(3, Math.round((v / max) * height)),
+            height: Math.max(3, Math.round((Math.max(0, v) / max) * height)),
             borderRadius: '2px',
             bgcolor: i === highlight ? theme.palette.primary.main : kit(theme).chart.muted,
           })}

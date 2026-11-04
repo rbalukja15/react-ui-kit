@@ -62,4 +62,14 @@ describe('<Meter>', () => {
     expect(meter).toHaveAttribute('aria-valuenow', '100');
     expect(meter).toHaveAttribute('aria-valuetext', '140%');
   });
+
+  it('can be named by a visible label instead', () => {
+    withKit(
+      <>
+        <span id="stock-label">Stock left</span>
+        <Meter value={30} aria-labelledby="stock-label" />
+      </>,
+    );
+    expect(screen.getByRole('meter', { name: 'Stock left' })).toBeInTheDocument();
+  });
 });

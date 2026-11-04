@@ -46,6 +46,11 @@ export interface NavTokens {
   activeText: string;
   /** Dividers and the drawer's edge. */
   line: string;
+  /**
+   * Native colour scheme of the drawer, for its scrollbar. Left out, it is
+   * worked out from `bg`; set it when `bg` is a CSS variable.
+   */
+  colorScheme?: 'light' | 'dark';
 }
 
 declare module '@mui/material/styles' {
@@ -479,6 +484,7 @@ export function createAppTheme(mode: ThemeMode = 'light', overrides?: ThemeOverr
         activeBg: 'rgba(46,148,136,0.26)',
         activeText: '#9ED6CC',
         line: 'rgba(237,232,220,0.09)',
+        colorScheme: 'dark',
       },
     },
     typography: {

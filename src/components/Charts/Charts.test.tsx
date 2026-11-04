@@ -60,4 +60,11 @@ describe('<Sparkline>', () => {
     render(<Sparkline values={[1, 2, 3]} aria-label="Weekly sales: 1, 2, 3" />);
     expect(screen.getByRole('img', { name: 'Weekly sales: 1, 2, 3' })).toBeInTheDocument();
   });
+
+  it('draws negative values as empty bars', () => {
+    const { container } = render(<Sparkline values={[-5, 10]} aria-label="Change" />);
+    const bars = container.querySelectorAll('[role="img"] > div');
+    expect(getComputedStyle(bars[0]!).height).toBe('3px');
+    expect(getComputedStyle(bars[1]!).height).toBe('26px');
+  });
 });

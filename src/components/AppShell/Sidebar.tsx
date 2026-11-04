@@ -30,18 +30,20 @@ const widthTransition = (theme: Theme) =>
   });
 
 /**
- * The drawer's own colours from the `nav` tokens. `color-scheme` follows the
- * fill, so a dark rail on a light page gets dark scrollbars.
+ * The drawer's own colours from the `nav` tokens. `color-scheme` follows
+ * `nav.colorScheme`, or else the fill, so a dark rail on a light page gets
+ * dark scrollbars.
  */
 const navPaper = (theme: Theme) => {
   const nav = kit(theme).nav;
-  let dark = theme.palette.mode === 'dark';
+  let dark = nav.colorScheme ? nav.colorScheme === 'dark' : theme.palette.mode === 'dark';
   let thumb = nav.line;
   try {
-    dark = getLuminance(nav.bg) < 0.4;
+    if (!nav.colorScheme) dark = getLuminance(nav.bg) < 0.4;
     thumb = alpha(nav.text, 0.25);
   } catch {
-    // A CSS variable or other colour MUI can't parse: keep the mode's defaults.
+    // A CSS variable or other colour MUI can't parse: set `nav.colorScheme`
+    // to choose; otherwise the theme's mode decides.
   }
   return {
     bgcolor: nav.bg,

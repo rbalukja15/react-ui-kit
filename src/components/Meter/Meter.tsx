@@ -3,14 +3,12 @@ import { Box } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { kit } from '../../internal/kitTokens';
 
-export interface MeterProps {
+interface MeterBaseProps {
   /** Current value, between `min` and `max`. Values outside are clamped. */
   value: number;
   min?: number;
   /** Defaults to `100`. */
   max?: number;
-  /** Accessible name, e.g. `'Profit margin'`. */
-  'aria-label'?: string;
   /** Read out instead of the bare number, e.g. `'57%'`. */
   valueText?: string;
   /** Fill colour: a palette key or any CSS colour. Defaults to `'primary'`. */
@@ -19,6 +17,13 @@ export interface MeterProps {
   height?: number;
   sx?: SxProps<Theme>;
 }
+
+/** A meter needs a name: `aria-label`, or `aria-labelledby` pointing at a visible label. */
+export type MeterProps = MeterBaseProps &
+  (
+    | { /** Accessible name, e.g. `'Profit margin'`. */ 'aria-label': string; 'aria-labelledby'?: string }
+    | { 'aria-label'?: string; /** Id of a visible label that names the meter. */ 'aria-labelledby': string }
+  );
 
 const paletteKeys = ['primary', 'secondary', 'success', 'warning', 'error', 'info'];
 
@@ -31,6 +36,7 @@ export function Meter({
   min = 0,
   max = 100,
   'aria-label': ariaLabel,
+  'aria-labelledby': labelledBy,
   valueText,
   color = 'primary',
   height = 6,
@@ -43,6 +49,7 @@ export function Meter({
     <Box
       role="meter"
       aria-label={ariaLabel}
+      aria-labelledby={labelledBy}
       aria-valuenow={clamped}
       aria-valuemin={min}
       aria-valuemax={max}

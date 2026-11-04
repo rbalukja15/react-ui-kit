@@ -105,12 +105,13 @@ Besides MUI's palette, the theme carries four token groups that the dashboard co
 | Token | Default (light) | Used for |
 | --- | --- | --- |
 | `palette.surface.tray` | `#F6F5EF` | The tray around a `Panel` |
-| `palette.surface.card` | `#FFFFFF` | Cards, outlined buttons, inputs |
+| `palette.surface.card` | `#FFFFFF` | Cards, outlined buttons, inputs, the `AppShell` header |
 | `palette.surface.track` | `#EDEBE3` | Meter tracks and count pills |
 | `palette.line.soft` / `main` / `strong` | `rgba(40,38,31,…)` at 6%, 10%, 14% | Row separators, axes, control outlines |
 | `palette.chart.muted` / `neutral` | `#CFE5E1`, `#D9D5C8` | Unselected bars, a neutral series beside primary |
 | `palette.nav.bg` / `text` / `muted` | `#23211D`, `#EDE8DC`, `#A9A293` | The sidebar: a dark rail in both modes (`#151411` in dark mode) |
 | `palette.nav.activeBg` / `activeText` / `hover` / `line` | teal tint, `#9ED6CC`, … | The current page's item, its focus ring, hover and dividers |
+| `palette.nav.colorScheme` | `'dark'` | Native scheme of the sidebar's scrollbar; worked out from `nav.bg` when left out, so set it when `bg` is a CSS variable |
 
 ```tsx
 const brand: ThemeOverrides = {
@@ -123,6 +124,7 @@ const lightRail: ThemeOverrides = (mode) => mode === 'light' ? {
     nav: {
       bg: '#FFFFFF', text: '#2A2722', muted: '#6F6A5C', hover: 'rgba(40,38,31,0.05)',
       activeBg: 'rgba(15,118,110,0.1)', activeText: '#0f766e', line: 'rgba(40,38,31,0.14)',
+      colorScheme: 'light',
     },
   },
 } : {};

@@ -352,6 +352,18 @@ describe('<AppShell>', () => {
       expect(item('Invoices').color).toBe(color('#2A2722'));
     });
 
+    it('takes the colour scheme from nav.colorScheme when it is set', () => {
+      const theme = createAppTheme('light', { palette: { nav: { bg: 'var(--rail)', colorScheme: 'dark' } } });
+      render(
+        <ThemeProvider theme={theme}>
+          <AppShell navItems={navItems}>x</AppShell>
+        </ThemeProvider>,
+      );
+      const css = [...document.querySelectorAll('style')].map((s) => s.textContent ?? '').join('');
+      expect(css).toContain('background-color:var(--rail)');
+      expect(css).toMatch(/color-scheme:dark/);
+    });
+
     it('falls back to the text colour under a plain MUI theme', () => {
       render(<AppShell navItems={navItems}>x</AppShell>);
       expect(item('Invoices').color).toBe(color('rgba(0, 0, 0, 0.87)'));
