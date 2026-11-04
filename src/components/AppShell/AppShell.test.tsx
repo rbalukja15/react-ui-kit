@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { ThemeProvider } from '@mui/material/styles';
+import { createAppTheme } from '../../theme/theme';
 import { AppShell } from './AppShell';
 
 const icon = <svg aria-hidden="true" width="24" height="24" />;
@@ -313,5 +315,70 @@ describe('<AppShell>', () => {
     expect(screen.getByRole('navigation', { name: 'Schnellzugriff' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Menü öffnen' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Seitenleiste einklappen' })).toBeInTheDocument();
+  });
+
+  describe('sidebar colours', () => {
+    function color(value: string) {
+      const el = document.createElement('div');
+      el.style.color = value;
+      return el.style.color;
+    }
+    // jsdom ignores selector specificity, so these read the items' own
+    // colours; the drawer fill is covered by the Storybook snapshots.
+    const item = (name: string) => getComputedStyle(within(sidebar()).getByRole('link', { name }));
+
+    it.each(['light', 'dark'] as const)('colours the items from the nav tokens in %s mode', (mode) => {
+      const theme = createAppTheme(mode);
+      render(
+        <ThemeProvider theme={theme}>
+          <AppShell navItems={navItems} currentPath="/clients">x</AppShell>
+        </ThemeProvider>,
+      );
+      expect(theme.palette.nav.bg).toBe(mode === 'light' ? '#23211D' : '#151411');
+      expect(item('Clients').color).toBe(color(theme.palette.nav.activeText));
+      expect(item('Clients').backgroundColor).toBe(color(theme.palette.nav.activeBg));
+      expect(item('Invoices').color).toBe(color(theme.palette.nav.text));
+    });
+
+    it('lets a brand bring back a light rail through the nav tokens', () => {
+      const theme = createAppTheme('light', { palette: { nav: { bg: '#FFFFFF', text: '#2A2722' } } });
+      render(
+        <ThemeProvider theme={theme}>
+          <AppShell navItems={navItems}>x</AppShell>
+        </ThemeProvider>,
+      );
+      expect(theme.palette.nav.bg).toBe('#FFFFFF');
+      expect(theme.palette.nav.activeText).toBe('#9ED6CC');
+      expect(item('Invoices').color).toBe(color('#2A2722'));
+    });
+
+    it('takes the colour scheme from nav.colorScheme when it is set', () => {
+      const theme = createAppTheme('light', { palette: { nav: { bg: 'var(--rail)', colorScheme: 'dark' } } });
+      render(
+        <ThemeProvider theme={theme}>
+          <AppShell navItems={navItems}>x</AppShell>
+        </ThemeProvider>,
+      );
+      const css = [...document.querySelectorAll('style')].map((s) => s.textContent ?? '').join('');
+      expect(css).toContain('background-color:var(--rail)');
+      expect(css).toMatch(/color-scheme:dark/);
+    });
+
+    it('falls back to the text colour under a plain MUI theme', () => {
+      render(<AppShell navItems={navItems}>x</AppShell>);
+      expect(item('Invoices').color).toBe(color('rgba(0, 0, 0, 0.87)'));
+    });
+
+    it('paints the page colour behind the shell', () => {
+      const theme = createAppTheme('dark');
+      const { container } = render(
+        <ThemeProvider theme={theme}>
+          <AppShell navItems={navItems}>x</AppShell>
+        </ThemeProvider>,
+      );
+      const root = getComputedStyle(container.firstElementChild!);
+      expect(root.backgroundColor).toBe(color(theme.palette.background.default));
+      expect(root.color).toBe(color(theme.palette.text.primary));
+    });
   });
 });

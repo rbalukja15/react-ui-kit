@@ -15,7 +15,7 @@ A small, deliberately-scoped React component library built on **MUI** (v5, v6, v
 
 ## Design language
 
-Warm editorial surfaces (cream paper, soft warm hairlines) on a teal brand axis. Headings render in **Newsreader** serif for an editorial display; body and labels stay **Inter** sans. Both light and a muted dark mode ship out of the box; semantic colours (success / warning / error / info) flip per mode to stay readable without glare.
+Warm surfaces (cream paper, soft warm hairlines) on a teal brand axis, with flat white cards in beige trays and no shadows. Everything is set in one sans-serif family, **Mona Sans**, with tight tracking on headings. Both light and a muted dark mode ship out of the box; semantic colours (success / warning / error / info) flip per mode to stay readable without glare.
 
 Tonal chips are the signature behaviour: filled `<Chip color="…">` renders as pale-tinted background + strong-text foreground rather than the bright filled block — quieter on dense pages.
 
@@ -37,13 +37,13 @@ npm install git+https://github.com/rbalukja15/react-ui-kit.git#main
 
 ### Fonts
 
-The theme references **Newsreader** for headings and **Inter** for body. Consumers must load them. For Next.js, add to `app/layout.tsx`:
+The theme uses **Mona Sans** for headings and body. Consumers must load it; without it the system UI face is used. For Next.js, add to `app/layout.tsx`:
 
 ```tsx
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 <link
-  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap"
+  href="https://fonts.googleapis.com/css2?family=Mona+Sans:wght@400..700&display=swap"
   rel="stylesheet"
 />
 ```
@@ -98,6 +98,42 @@ const brand: ThemeOverrides = (mode) => ({
 
 `overrides` is either a MUI `ThemeOptions` object or a function of the mode. A palette colour you pass (`primary`, `secondary`, `success`, `warning`, `error`, `info`) replaces the default one, so MUI derives `light`, `dark` and `contrastText` from your `main`. The same argument works without the provider: `createAppTheme('dark', brand)`.
 
+### Surface, line, chart and nav tokens
+
+Besides MUI's palette, the theme carries four token groups that the dashboard components (`Panel`, `StatTile`, `Pill`, the charts, `ListRow`) and the `AppShell` sidebar read. Override them like any palette key:
+
+| Token | Default (light) | Used for |
+| --- | --- | --- |
+| `palette.surface.tray` | `#F6F5EF` | The tray around a `Panel` |
+| `palette.surface.card` | `#FFFFFF` | Cards, outlined buttons, inputs, the `AppShell` header |
+| `palette.surface.track` | `#EDEBE3` | Meter tracks and count pills |
+| `palette.line.soft` / `main` / `strong` | `rgba(40,38,31,…)` at 6%, 10%, 14% | Row separators, axes, control outlines |
+| `palette.chart.muted` / `neutral` | `#CFE5E1`, `#D9D5C8` | Unselected bars, a neutral series beside primary |
+| `palette.nav.bg` / `text` / `muted` | `#23211D`, `#EDE8DC`, `#A9A293` | The sidebar: a dark rail in both modes (`#151411` in dark mode) |
+| `palette.nav.activeBg` / `activeText` / `hover` / `line` | teal tint, `#9ED6CC`, … | The current page's item, its focus ring, hover and dividers |
+| `palette.nav.colorScheme` | `'dark'` | Native scheme of the sidebar's scrollbar; worked out from `nav.bg` when left out, so set it when `bg` is a CSS variable |
+
+```tsx
+const brand: ThemeOverrides = {
+  palette: { primary: { main: '#5B2CC9' }, chart: { muted: '#DDD3FA' } },
+};
+
+// A light sidebar instead of the dark one.
+const lightRail: ThemeOverrides = (mode) => mode === 'light' ? {
+  palette: {
+    nav: {
+      bg: '#FFFFFF', text: '#2A2722', muted: '#6F6A5C', hover: 'rgba(40,38,31,0.05)',
+      activeBg: 'rgba(15,118,110,0.1)', activeText: '#0f766e', line: 'rgba(40,38,31,0.14)',
+      colorScheme: 'light',
+    },
+  },
+} : {};
+```
+
+The theme also sets `color-scheme` and a matching `scrollbar-color` on `<html>` from the mode, so native scrollbars and form controls follow the app's light or dark mode rather than the operating system's.
+
+The components fall back to values derived from the standard palette under a plain MUI theme. Storybook's "Screens/VetApp" section shows a statistics page and a dashboard built only from kit components, on desktop and on a phone.
+
 ### Light, dark and system mode
 
 `ThemeModeProvider` is uncontrolled by default. `defaultMode` accepts `'light'`, `'dark'` or `'system'`; `'system'` follows the OS `prefers-color-scheme` setting and updates live when it changes. Pass `storageKey` to remember the user's choice in `localStorage`:
@@ -127,21 +163,33 @@ The stored choice and the OS setting are only read in the browser. Server HTML r
 | Component | What it does | Notes |
 | --- | --- | --- |
 | `AppShell` | Responsive app layout: sidebar, sticky header, page content and an optional mobile bottom bar | Collapsible icon rail with opt-in `localStorage` persistence; router-agnostic. See [App shell](#app-shell) |
+| `BarChart` | Soft rounded bars, one series; pass `onSelect` to pick a bar, which turns primary with a value pill above it | Also `StackedBarChart` (e.g. cost under profit), `ChartLegend` and `AxisLabels`. No chart library |
 | `BottomNav` | Fixed mobile bottom navigation bar | Used by `AppShell`, also usable alone; link is injectable |
 | `Breadcrumbs` | Breadcrumb trail for detail-page headers | Link is injectable; last crumb gets `aria-current="page"` |
 | `ConfirmDialog` | Promise-based `confirm()` replacement via context + `useConfirm()` hook | Labels are props (no i18n dependency) |
 | `DataTable` | Table with sorting, pagination, row selection, a columns menu and row actions | Client or server mode; every piece of state can be controlled, e.g. kept in the URL. See [Data table](#data-table) |
 | `DatePickerField` | Date input with a popover calendar; the value is an ISO `YYYY-MM-DD` string | From `/date-picker` (needs `@mui/x-date-pickers` and `dayjs`); RHF adapter from `/date-picker/rhf`. See [Forms](#forms) |
 | `DatePresets` | Quick-pick chips such as "+1 month / +3 months / +1 year" next to a date field | Counts from a base date read at click time, or today; returns an ISO `YYYY-MM-DD` string. No date library needed |
+| `DropdownButton` | Outlined button with a chevron that opens your menu or picker: a date range, a period | Sets `aria-haspopup`; pass `open` for `aria-expanded` |
 | `EmptyState` | Empty-list placeholder with tinted icon tile + optional CTA | Link is injectable — works with Next, react-router, or `<a>` |
+| `FilterChips` | Row of pill toggles for one filter; the active one is tinted and checked | `aria-pressed` buttons in a named group |
 | `FloatingCreateButton` | Mobile-only "create" FAB | Hides at the configured breakpoint; link is injectable |
 | `IdAutocomplete` | Single-select picker over `{ id, label }` options whose value is the chosen id | Optional server search, group headers and an "Add …" row; RHF adapter from `/rhf` |
+| `ListRow` | Compact list line: name · meta, grey sub-line, right-aligned status in muted, amber or red | Optional leading slot (a time) and `href`. `SummaryList` renders label/value rows ending in a total |
+| `Meter` | Thin rounded bar for a share or margin | `role="meter"` with value text |
+| `PageHeader` | Page `<h1>`, one-line subtitle and the main actions | Actions wrap under the title on narrow screens |
 | `PageSkeleton` | Whole-page loading placeholder (`list`, `profile` or `document` layout) | Announces one "Loading" status; label is a prop |
+| `Panel` | White card in a beige tray with hairline borders and no shadow; header is a small grey label with an outline icon and an action | A named `<section>`; `landmark={false}` for repeated cards |
+| `Pill` | Rounded label for counts, trends and warnings | `neutral`, `primary`, `success`, `warning`, `error`, `info` tones |
 | `RowActions` | Keeps a table row's action buttons on one line | Wrap the buttons in the action cell |
+| `SearchField` | Compact search input with a leading magnifier | Hidden label from `label`; pair with `useUrlSearch` |
+| `Sparkline` | Tiny bar chart that fits in a table cell | One labelled image; last bar highlighted |
+| `StatTile` | One figure: grey label with icon, big number, unit, a note and an optional trend `Pill` | Children for a `Meter` or a link |
 | `StatusChip` | Status chip that opens a menu of the statuses it may move to next | Labels and colors per status are props; read-only without `onChange`. Optional extra actions above the statuses |
 | `TableSkeleton` | Loading placeholder for tables | Zero coupling, pure MUI |
 | `TitleCaseField` | Text field that title-cases a name-like value on blur | The rule is exported as `titleCase`; RHF adapter from `/rhf` |
 | `TruncatedText` | One-line text with an ellipsis | Tooltip with the full text only when it is cut off |
+| `TwoLineCell` | Table cell with a name over a grey sub-line, or a figure over its previous value | Optional icon tile; use it in a `DataTable` column's `cell` |
 | `ThemeModeProvider` | MUI theme + light/dark/system mode | Controlled or uncontrolled; opt-in `localStorage` persistence |
 | `useDebouncedValue` | Debounce any value | — |
 | `useUrlState` | Typed state kept in the URL query string | Router is injectable; see [URL state](#url-state) |

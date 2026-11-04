@@ -2,7 +2,7 @@ import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import { ThemeProvider, alpha, type Theme } from '@mui/material/styles';
 import {
-  Button, Card, Chip, Dialog, DialogTitle, Divider, Drawer, Tab, Table, TableBody, TableCell,
+  Button, Card, Chip, Link, Dialog, DialogTitle, Divider, Drawer, Tab, Table, TableBody, TableCell,
   TableHead, TableRow, Tabs, Tooltip, Typography,
 } from '@mui/material';
 import { createAppTheme, type ThemeMode, type ThemeOverrides } from './theme';
@@ -38,7 +38,8 @@ describe('MuiButton', () => {
     const button = style(screen.getByRole('button', { name: 'Save changes' }));
     expect(button.textTransform).toBe('none');
     expect(button.fontWeight).toBe('600');
-    expect(button.borderRadius).toBe('9px');
+    expect(button.borderRadius).toBe('12px');
+    expect(button.boxShadow).toBe('none');
   });
 });
 
@@ -100,11 +101,11 @@ describe('surfaces', () => {
     expect(paper.color).toBe(color(theme.palette.text.primary));
   });
 
-  it('rounds dialogs and sets their title in the display serif', () => {
+  it('rounds dialogs and sets their title in the sans family', () => {
     renderWith(<Dialog open><DialogTitle>Delete record</DialogTitle></Dialog>);
     expect(style(document.querySelector('.MuiDialog-paper')!).borderRadius).toBe('16px');
     const title = style(screen.getByText('Delete record'));
-    expect(title.fontFamily).toContain('Newsreader');
+    expect(title.fontFamily).toContain('Mona Sans');
     expect(title.fontWeight).toBe('600');
   });
 
@@ -124,16 +125,17 @@ describe('tables', () => {
     </Table>
   );
 
-  it.each(modes)('tints and bolds the header row in %s mode', (mode) => {
+  it.each(modes)('draws the header row as quiet grey labels on the card in %s mode', (mode) => {
     const { theme } = renderWith(table, mode);
-    expect(style(screen.getByText('Name')).backgroundColor).toBe(color(mode === 'light' ? '#F2F0E8' : '#2E2A26'));
-    const root = theme.components?.MuiTableHead?.styleOverrides?.root as Record<string, { fontWeight: number }>;
-    expect(root['& .MuiTableCell-head']?.fontWeight).toBe(700);
+    const head = style(screen.getByText('Name'));
+    expect(head.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(head.color).toBe(color(theme.palette.text.secondary));
+    expect(head.fontWeight).toBe('500');
   });
 
   it('lines numbers up in table cells', () => {
-    const root = createAppTheme('light').components?.MuiTableCell?.styleOverrides?.root as { fontVariantNumeric: string };
-    expect(root.fontVariantNumeric).toBe('tabular-nums');
+    renderWith(table);
+    expect(style(screen.getByText('Ada')).fontVariantNumeric).toBe('tabular-nums');
   });
 
   it('tints row hover with the brand colour, including an overridden one', () => {
@@ -178,20 +180,20 @@ describe('navigation and inputs', () => {
 });
 
 describe('typography', () => {
-  it('sets headings in the display serif and body copy in Inter', () => {
+  it('sets headings and body copy in one sans family', () => {
     renderWith(<><Typography variant="h1">Heading</Typography><Typography>Body</Typography></>);
-    expect(style(screen.getByText('Heading')).fontFamily).toContain('Newsreader');
-    expect(style(screen.getByText('Body')).fontFamily).toContain('Inter');
+    expect(style(screen.getByText('Heading')).fontFamily).toContain('Mona Sans');
+    expect(style(screen.getByText('Body')).fontFamily).toContain('Mona Sans');
   });
 
-  it('lets a brand swap the body font without losing the display headings', () => {
+  it('lets a brand swap the font for headings and body at once', () => {
     renderWith(
       <><Typography variant="h1">Heading</Typography><Typography>Body</Typography></>,
       'light',
       { typography: { fontFamily: 'Poppins, sans-serif' } },
     );
     expect(style(screen.getByText('Body')).fontFamily).toContain('Poppins');
-    expect(style(screen.getByText('Heading')).fontFamily).toContain('Newsreader');
+    expect(style(screen.getByText('Heading')).fontFamily).toContain('Poppins');
   });
 });
 
@@ -220,3 +222,19 @@ describe('consumer component overrides', () => {
     expect(style(screen.getByText('Label')).letterSpacing).toBe('0.2em');
   });
 });
+
+describe('MuiLink', () => {
+  it('uses the light primary shade for links in dark mode', () => {
+    const { theme } = renderWith(<Link href="#">More</Link>, 'dark');
+    expect(style(screen.getByRole('link', { name: 'More' })).color).toBe(color(theme.palette.primary.light));
+  });
+});
+
+describe('MuiCssBaseline', () => {
+  it.each(modes)('sets the colour scheme and scrollbar colour to %s', (mode) => {
+    const html = (createAppTheme(mode).components?.MuiCssBaseline?.styleOverrides as { html: Record<string, string> }).html;
+    expect(html.colorScheme).toBe(mode);
+    expect(html.scrollbarColor).toMatch(/ transparent$/);
+  });
+});
+

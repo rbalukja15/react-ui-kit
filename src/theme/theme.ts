@@ -4,19 +4,83 @@ import type { PaletteMode } from '@mui/material';
 export type ThemeMode = 'light' | 'dark';
 
 /**
+ * Layered surfaces. A `Panel` is a `card` sitting inside a slightly darker
+ * `tray`; `track` fills meters, count badges and other recessed shapes.
+ */
+export interface SurfaceTokens {
+  tray: string;
+  card: string;
+  track: string;
+}
+
+/** Hairlines, from row separators (`soft`) to control outlines (`strong`). */
+export interface LineTokens {
+  soft: string;
+  main: string;
+  strong: string;
+}
+
+/** Chart fills that sit beside `primary.main`: unselected bars and a neutral series. */
+export interface ChartTokens {
+  muted: string;
+  neutral: string;
+}
+
+/**
+ * The app shell's sidebar. It has its own colours so it can sit apart from
+ * the page: dark ink in both modes by default. Override these to bring back
+ * a light rail, e.g. `{ nav: { bg: '#FFFFFF', text: '#2A2722', … } }`.
+ */
+export interface NavTokens {
+  /** Drawer fill. */
+  bg: string;
+  /** Item labels and the brand. */
+  text: string;
+  /** Icons of items that are not the current page. */
+  muted: string;
+  /** Hover fill of items that are not the current page. */
+  hover: string;
+  /** Fill of the current page's item. */
+  activeBg: string;
+  /** Label and icon of the current page's item, and the focus ring. */
+  activeText: string;
+  /** Dividers and the drawer's edge. */
+  line: string;
+  /**
+   * Native colour scheme of the drawer, for its scrollbar. Left out, it is
+   * worked out from `bg`; set it when `bg` is a CSS variable.
+   */
+  colorScheme?: 'light' | 'dark';
+}
+
+declare module '@mui/material/styles' {
+  interface Palette {
+    surface: SurfaceTokens;
+    line: LineTokens;
+    chart: ChartTokens;
+    nav: NavTokens;
+  }
+  interface PaletteOptions {
+    surface?: Partial<SurfaceTokens>;
+    line?: Partial<LineTokens>;
+    chart?: Partial<ChartTokens>;
+    nav?: Partial<NavTokens>;
+  }
+}
+
+/**
  * Brand overrides layered on top of the library theme. Pass a plain
  * ``ThemeOptions`` object, or a function of the mode when light and dark
  * need different values (e.g. a muted primary in dark mode).
  */
 export type ThemeOverrides = ThemeOptions | ((mode: ThemeMode) => ThemeOptions);
 
-// Display/serif face — editorial serif headings. Consumers load
-// Newsreader themselves (see README "Fonts"). Falls back to a system
-// serif stack if the webfont isn't present.
-const displayFont = '"Newsreader", Georgia, "Times New Roman", serif';
+// One sans-serif family for headings and body. Consumers load Mona Sans
+// themselves (see README "Fonts"); without it the system UI face is used.
+const fontStack = '"Mona Sans", "Mona Sans Variable", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
 
 /**
- * Library theme — a warm editorial design language on a teal brand
+ * Library theme — a warm, flat design language on a teal brand
  * axis, in both light and a muted dark mode.
  *
  * Four principles drive the design:
@@ -37,9 +101,9 @@ const displayFont = '"Newsreader", Georgia, "Times New Roman", serif';
  *      hover / divider / tooltip / focus is re-routed through the warm
  *      + teal axis below. Teal is muted in dark mode to avoid glare.
  *
- *   4. **Editorial serif display.** ``h1``–``h6``, dialog titles and stat
- *      numbers use Newsreader; body, captions and buttons stay Inter
- *      sentence-case.
+ *   4. **One sans-serif family.** Headings, body, captions and buttons
+ *      all use Mona Sans; headings get weight 600 and tight tracking
+ *      instead of a second display face.
  *
  * Tonal chips are the other behavioural change: MUI's default
  * ``<Chip color="error" />`` is a vivid filled block — fine for a single
@@ -54,19 +118,81 @@ const sharedComponents = (mode: PaletteMode) => ({
   // grows tall enough to need a vertical scrollbar doesn't shift the
   // whole layout sideways when it appears. No-op where the OS uses
   // overlay scrollbars.
+  // `color-scheme` and `scrollbar-color` follow the theme's mode rather
+  // than the OS, so native scrollbars and form controls never turn dark on
+  // a light page (or the other way round). `scrollbar-color` is inherited,
+  // so it reaches tables and other scroll areas too.
   MuiCssBaseline: {
     styleOverrides: {
-      html: { scrollbarGutter: 'stable' },
+      html: {
+        scrollbarGutter: 'stable',
+        colorScheme: mode,
+        scrollbarColor: `${mode === 'light' ? 'rgba(40,38,31,0.28)' : 'rgba(237,232,220,0.28)'} transparent`,
+      },
     },
   },
+  // Flat buttons on three fixed heights (36 / 40 / 44). Outlined is the
+  // everyday secondary button: a card-coloured fill with a strong hairline.
   MuiButton: {
+    defaultProps: { disableElevation: true },
     styleOverrides: {
       root: {
-        borderRadius: 9,
+        borderRadius: 12,
         textTransform: 'none' as const,
         fontWeight: 600,
         letterSpacing: '-0.01em',
       },
+      sizeSmall: { minHeight: 36, padding: '0 12px', fontSize: '0.8125rem' },
+      sizeMedium: { minHeight: 40, padding: '0 14px' },
+      sizeLarge: { minHeight: 44, padding: '0 16px', fontSize: '0.875rem' },
+      outlined: ({ theme }: { theme: Theme }) => ({
+        fontWeight: 500,
+        backgroundColor: theme.palette.surface.card,
+        borderColor: theme.palette.line.strong,
+        color: theme.palette.text.primary,
+        '&:hover': { backgroundColor: theme.palette.surface.tray, borderColor: theme.palette.line.strong },
+      }),
+    },
+  },
+  // The muted dark-mode teal is too dark for text on the dark cards, so
+  // primary links use its light shade there.
+  MuiLink: {
+    styleOverrides: {
+      root: ({ theme, ownerState }: { theme: Theme; ownerState: { color?: unknown } }) =>
+        theme.palette.mode === 'dark' && (ownerState.color === undefined || ownerState.color === 'primary')
+          ? { color: theme.palette.primary.light, textDecorationColor: alpha(theme.palette.primary.light, 0.4) }
+          : {},
+    },
+  },
+  MuiIconButton: {
+    styleOverrides: {
+      root: { borderRadius: 10 },
+    },
+  },
+  // Pager arrows are bordered square buttons, as in the rest of the toolbar.
+  MuiTablePagination: {
+    styleOverrides: {
+      root: ({ theme }: { theme: Theme }) => ({ color: theme.palette.text.secondary, borderBottom: 0 }),
+      displayedRows: { fontSize: '0.8125rem', fontVariantNumeric: 'tabular-nums' },
+      actions: ({ theme }: { theme: Theme }) => ({
+        display: 'flex',
+        gap: 8,
+        '& .MuiIconButton-root': {
+          width: 36,
+          height: 36,
+          border: `1px solid ${theme.palette.line.strong}`,
+          backgroundColor: theme.palette.surface.card,
+          color: theme.palette.text.primary,
+        },
+        '& .MuiIconButton-root.Mui-disabled': { borderColor: theme.palette.line.main, color: theme.palette.text.disabled },
+      }),
+    },
+  },
+  MuiTableSortLabel: {
+    styleOverrides: {
+      root: ({ theme }: { theme: Theme }) => ({
+        '&.Mui-active': { color: theme.palette.text.primary, fontWeight: 600 },
+      }),
     },
   },
   MuiCard: {
@@ -96,10 +222,19 @@ const sharedComponents = (mode: PaletteMode) => ({
   },
   MuiTableCell: {
     styleOverrides: {
-      root: {
-        borderBottomColor: mode === 'light' ? 'rgba(40,38,31,0.08)' : 'rgba(237,232,220,0.08)',
+      root: ({ theme }: { theme: Theme }) => ({
+        borderBottomColor: theme.palette.line.soft,
         fontVariantNumeric: 'tabular-nums',
-      },
+        padding: '10px 8px',
+        // A little tighter on phones, where every column fights for room.
+        [theme.breakpoints.down('sm')]: { padding: '10px 6px' },
+      }),
+      head: ({ theme }: { theme: Theme }) => ({
+        borderBottomColor: theme.palette.line.main,
+        color: theme.palette.text.secondary,
+        fontSize: '0.75rem',
+        fontWeight: 500,
+      }),
     },
   },
   MuiTooltip: {
@@ -156,16 +291,6 @@ const sharedComponents = (mode: PaletteMode) => ({
       },
     },
   },
-  MuiTableHead: {
-    styleOverrides: {
-      root: {
-        '& .MuiTableCell-head': {
-          fontWeight: 700,
-          backgroundColor: mode === 'light' ? '#F2F0E8' : '#2E2A26',
-        },
-      },
-    },
-  },
   // Follow the palette so the drawer matches the current mode and any
   // brand overrides. ``backgroundImage: none`` drops MUI's dark-mode
   // elevation overlay, which would otherwise lighten the paper.
@@ -185,6 +310,8 @@ const sharedComponents = (mode: PaletteMode) => ({
   MuiOutlinedInput: {
     styleOverrides: {
       root: ({ theme }: { theme: Theme }) => ({
+        borderRadius: 12,
+        backgroundColor: theme.palette.surface.card,
         '& .MuiOutlinedInput-notchedOutline': {
           borderColor: alpha(theme.palette.text.primary, 0.18),
         },
@@ -236,9 +363,9 @@ const sharedComponents = (mode: PaletteMode) => ({
   MuiDialogTitle: {
     styleOverrides: {
       root: {
-        fontFamily: displayFont,
         fontSize: '1.25rem',
         fontWeight: 600,
+        letterSpacing: '-0.02em',
       },
     },
   },
@@ -322,8 +449,9 @@ export function createAppTheme(mode: ThemeMode = 'light', overrides?: ThemeOverr
       success: isLight
         ? { main: '#5F7544', light: '#8BA862', dark: '#4E5E34', contrastText: '#ffffff' }
         : { main: '#A8C089', light: '#C2D6A8', dark: '#7C9658', contrastText: '#14210A' },
+      // Amber: ``main`` tints and outlines warning chips, ``dark`` is their text.
       warning: isLight
-        ? { main: '#9A6824', light: '#D8A24A', dark: '#7A521A', contrastText: '#ffffff' }
+        ? { main: '#B0792E', light: '#D8A24A', dark: '#7A5219', contrastText: '#1C1712' }
         : { main: '#E0B468', light: '#EECB92', dark: '#B0892E', contrastText: '#241803' },
       error: isLight
         ? { main: '#B23A3A', light: '#D87A7A', dark: '#98302A', contrastText: '#ffffff' }
@@ -338,15 +466,35 @@ export function createAppTheme(mode: ThemeMode = 'light', overrides?: ThemeOverr
         ? { primary: '#2A2722', secondary: '#6F6A5C', disabled: '#A8A294' }
         : { primary: '#EDE8DC', secondary: '#B8B0A0', disabled: '#7C766A' },
       divider: isLight ? 'rgba(40,38,31,0.10)' : 'rgba(237,232,220,0.10)',
+      surface: isLight
+        ? { tray: '#F6F5EF', card: '#FFFFFF', track: '#EDEBE3' }
+        : { tray: '#211F1B', card: '#2A2723', track: '#3A3631' },
+      line: isLight
+        ? { soft: 'rgba(40,38,31,0.06)', main: 'rgba(40,38,31,0.10)', strong: 'rgba(40,38,31,0.14)' }
+        : { soft: 'rgba(237,232,220,0.06)', main: 'rgba(237,232,220,0.10)', strong: 'rgba(237,232,220,0.16)' },
+      chart: isLight
+        ? { muted: '#CFE5E1', neutral: '#D9D5C8' }
+        : { muted: '#2F4A46', neutral: '#4A453D' },
+      // Warm ink in light mode; a shade below the page in dark mode.
+      nav: {
+        bg: isLight ? '#23211D' : '#151411',
+        text: '#EDE8DC',
+        muted: '#A9A293',
+        hover: 'rgba(237,232,220,0.07)',
+        activeBg: 'rgba(46,148,136,0.26)',
+        activeText: '#9ED6CC',
+        line: 'rgba(237,232,220,0.09)',
+        colorScheme: 'dark',
+      },
     },
     typography: {
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-      h1: { fontFamily: displayFont, fontWeight: 600, fontSize: '2.25rem', lineHeight: 1.15, letterSpacing: '-0.01em' },
-      h2: { fontFamily: displayFont, fontWeight: 600, fontSize: '1.875rem', lineHeight: 1.2, letterSpacing: '-0.01em' },
-      h3: { fontFamily: displayFont, fontWeight: 600, fontSize: '1.5rem', lineHeight: 1.25, letterSpacing: '-0.005em' },
-      h4: { fontFamily: displayFont, fontWeight: 600, fontSize: '1.25rem', lineHeight: 1.3 },
-      h5: { fontFamily: displayFont, fontWeight: 600, fontSize: '1.2rem', lineHeight: 1.35 },
-      h6: { fontFamily: displayFont, fontWeight: 600, fontSize: '1.05rem', lineHeight: 1.4 },
+      fontFamily: fontStack,
+      h1: { fontWeight: 600, fontSize: '2rem', lineHeight: 1.15, letterSpacing: '-0.03em' },
+      h2: { fontWeight: 600, fontSize: '1.625rem', lineHeight: 1.2, letterSpacing: '-0.025em' },
+      h3: { fontWeight: 600, fontSize: '1.375rem', lineHeight: 1.25, letterSpacing: '-0.02em' },
+      h4: { fontWeight: 600, fontSize: '1.25rem', lineHeight: 1.3, letterSpacing: '-0.02em' },
+      h5: { fontWeight: 600, fontSize: '1.125rem', lineHeight: 1.35, letterSpacing: '-0.015em' },
+      h6: { fontWeight: 600, fontSize: '1rem', lineHeight: 1.4, letterSpacing: '-0.01em' },
       body1: { fontSize: '0.9375rem', lineHeight: 1.55 },
       body2: { fontSize: '0.875rem', lineHeight: 1.55 },
       caption: { fontSize: '0.75rem', lineHeight: 1.4, letterSpacing: '0.01em' },

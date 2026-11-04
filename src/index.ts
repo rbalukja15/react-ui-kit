@@ -1,22 +1,33 @@
 // Components
 export * from './components/AppShell';
 export * from './components/Breadcrumbs';
+export * from './components/Charts';
 export * from './components/ConfirmDialog';
 export * from './components/DataTable';
 export * from './components/DatePresets';
+export * from './components/DropdownButton';
 export * from './components/EmptyState';
+export * from './components/FilterChips';
 export * from './components/FloatingCreateButton';
 export * from './components/IdAutocomplete';
+export * from './components/ListRow';
+export * from './components/Meter';
+export * from './components/PageHeader';
+export * from './components/Panel';
+export * from './components/Pill';
 export * from './components/PageSkeleton';
 export * from './components/RowActions';
+export * from './components/SearchField';
+export * from './components/StatTile';
 export * from './components/StatusChip';
 export * from './components/TableSkeleton';
 export * from './components/TitleCaseField';
 export * from './components/TruncatedText';
+export * from './components/TwoLineCell';
 
 // Theme
 export { createAppTheme } from './theme/theme';
-export type { ThemeMode, ThemeOverrides } from './theme/theme';
+export type { ChartTokens, LineTokens, NavTokens, SurfaceTokens, ThemeMode, ThemeOverrides } from './theme/theme';
 export { ThemeModeProvider, useThemeMode } from './theme/ThemeModeContext';
 export type {
   ThemeModeContextValue,
