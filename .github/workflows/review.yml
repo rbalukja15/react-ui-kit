@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 0
       - uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # Comments come from github-actions[bot] instead of a separate app.
           github_token: ${{ secrets.GITHUB_TOKEN }}
           include_fix_links: false
