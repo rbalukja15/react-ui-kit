@@ -48,9 +48,10 @@ jobs:
           claude_args: >-
             --allowedTools "Read,Grep,Glob,Write,Skill,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*)"
       # The action passes even when the review never gets posted, so check
-      # for the comment and list any blocked tool calls to show why.
+      # for the report (every ponytail report opens with "What this change
+      # does:") and list any blocked tool calls to show why.
       - name: Check the review was posted
-        if: always() && steps.review.outcome == 'success'
+        if: steps.review.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           STARTED: ${{ steps.start.outputs.at }}
@@ -58,7 +59,7 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
         run: |
           posted=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
-            --jq "[.[] | select(.user.login == \"github-actions[bot]\" and .created_at >= \"$STARTED\")] | length" \
+            --jq "[.[] | select(.user.login == \"github-actions[bot]\" and .created_at >= \"$STARTED\" and (.body | contains(\"What this change does:\")))] | length" \
             | awk '{ n += $1 } END { print n + 0 }')
           if [ "$posted" -gt 0 ]; then
             echo "Review posted."
