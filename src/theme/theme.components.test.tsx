@@ -133,6 +133,23 @@ describe('tables', () => {
     expect(head.fontWeight).toBe('500');
   });
 
+  it.each(modes)('paints a pinned header in the card colour, not the page colour, in %s mode', (mode) => {
+    const { theme } = renderWith(
+      <Table stickyHeader>
+        <TableHead><TableRow><TableCell>Pinned</TableCell></TableRow></TableHead>
+      </Table>,
+      mode,
+    );
+    const bg = style(screen.getByText('Pinned')).backgroundColor;
+    expect(bg).toBe(`var(--ui-surface, ${theme.palette.background.paper})`);
+    expect(bg).not.toContain(theme.palette.background.default);
+  });
+
+  it('resets --ui-surface on paper, so a table in a Card inside a Panel matches the Card', () => {
+    const { theme } = renderWith(<Card>inside</Card>, 'dark');
+    expect(style(screen.getByText('inside')).getPropertyValue('--ui-surface')).toBe(theme.palette.background.paper);
+  });
+
   it('lines numbers up in table cells', () => {
     renderWith(table);
     expect(style(screen.getByText('Ada')).fontVariantNumeric).toBe('tabular-nums');

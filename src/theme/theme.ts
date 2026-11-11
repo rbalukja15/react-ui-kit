@@ -195,6 +195,13 @@ const sharedComponents = (mode: PaletteMode) => ({
       }),
     },
   },
+  // Any paper (Card, a nested Paper, a Dialog) is its own surface, so it
+  // resets --ui-surface for pinned table headers inside it.
+  MuiPaper: {
+    styleOverrides: {
+      root: ({ theme }: { theme: Theme }) => ({ '--ui-surface': theme.palette.background.paper }),
+    },
+  },
   MuiCard: {
     styleOverrides: {
       root: {
@@ -234,6 +241,13 @@ const sharedComponents = (mode: PaletteMode) => ({
         color: theme.palette.text.secondary,
         fontSize: '0.75rem',
         fontWeight: 500,
+      }),
+      // MUI paints pinned headers in the page colour, which shows as a dark
+      // band across a card. Use the surface the table sits on instead:
+      // containers that paint their own surface (like Panel) publish it as
+      // --ui-surface, and plain paper is the fallback.
+      stickyHeader: ({ theme }: { theme: Theme }) => ({
+        backgroundColor: `var(--ui-surface, ${theme.palette.background.paper})`,
       }),
     },
   },

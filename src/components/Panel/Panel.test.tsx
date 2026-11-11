@@ -23,6 +23,13 @@ describe('<Panel>', () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
+  it('publishes its card colour so pinned table headers inside it match', () => {
+    const theme = createAppTheme('dark');
+    render(<ThemeProvider theme={theme}><Panel aria-label="Clients"><p>rows</p></Panel></ThemeProvider>);
+    const card = screen.getByText('rows').parentElement!;
+    expect(getComputedStyle(card).getPropertyValue('--ui-surface')).toBe(theme.palette.surface.card);
+  });
+
   it('takes an aria-label when it has no title', () => {
     withKit(<Panel aria-label="Totals">x</Panel>);
     expect(screen.getByRole('region', { name: 'Totals' })).toBeInTheDocument();
