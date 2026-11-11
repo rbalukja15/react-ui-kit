@@ -140,6 +140,11 @@ describe('<ConfirmDialog>', () => {
     expect(screen.getByRole('button', { name: 'Confirm' })).toHaveFocus();
   });
 
+  it('can focus Cancel on a non-destructive prompt too', async () => {
+    await openWith({ message: 'Send the reminder?', focus: 'cancel' });
+    expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+  });
+
   it('keeps the dialog compact and full width', async () => {
     await openWith({ message: 'Sure?' });
     const paper = screen.getByRole('dialog');
