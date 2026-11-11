@@ -5,6 +5,7 @@ import { Box, Button, Chip, IconButton, Stack, TextField, Typography } from '@mu
 import { UrlStateProvider, type UrlAdapter } from '../../hooks/UrlStateProvider';
 import { useUrlState } from '../../hooks/useUrlState';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { Panel } from '../Panel';
 import { DataTable, type DataTableColumn, type DataTableRowId } from './DataTable';
 import type { DataTableSort } from './sortRows';
 
@@ -156,6 +157,22 @@ export const FullFeatured: Story = {
         <EditIcon />
       </IconButton>
     ),
+  },
+};
+
+/**
+ * A pinned header inside a `Panel` takes the panel's card colour, so rows
+ * scrolling underneath don't show through and no page-coloured band appears.
+ */
+export const StickyHeaderInPanel: Story = {
+  args: { stickyHeader: true, maxHeight: 260, size: 'small', defaultPageSize: 25 },
+  decorators: [(Story) => <Panel title="Recent orders"><Story /></Panel>],
+  play: async ({ canvasElement }) => {
+    const region = within(canvasElement).getByRole('region', { name: 'Orders' });
+    region.scrollTop = 120;
+    const header = within(region).getAllByRole('columnheader')[0]!;
+    const card = region.closest('section')!.firstElementChild!;
+    await expect(getComputedStyle(header).backgroundColor).toBe(getComputedStyle(card).backgroundColor);
   },
 };
 

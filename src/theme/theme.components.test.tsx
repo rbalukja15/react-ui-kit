@@ -145,6 +145,11 @@ describe('tables', () => {
     expect(bg).not.toContain(theme.palette.background.default);
   });
 
+  it('resets --ui-surface on paper, so a table in a Card inside a Panel matches the Card', () => {
+    const { theme } = renderWith(<Card>inside</Card>, 'dark');
+    expect(style(screen.getByText('inside')).getPropertyValue('--ui-surface')).toBe(theme.palette.background.paper);
+  });
+
   it('lines numbers up in table cells', () => {
     renderWith(table);
     expect(style(screen.getByText('Ada')).fontVariantNumeric).toBe('tabular-nums');

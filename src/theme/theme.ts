@@ -195,6 +195,13 @@ const sharedComponents = (mode: PaletteMode) => ({
       }),
     },
   },
+  // Any paper (Card, a nested Paper, a Dialog) is its own surface, so it
+  // resets --ui-surface for pinned table headers inside it.
+  MuiPaper: {
+    styleOverrides: {
+      root: ({ theme }: { theme: Theme }) => ({ '--ui-surface': theme.palette.background.paper }),
+    },
+  },
   MuiCard: {
     styleOverrides: {
       root: {
