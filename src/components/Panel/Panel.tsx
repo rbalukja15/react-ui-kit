@@ -73,6 +73,8 @@ export function Panel({
         sx={[
           (theme) => ({
             bgcolor: kit(theme).surface.card,
+            // Lets pinned table headers inside the panel match its surface.
+            '--ui-surface': kit(theme).surface.card,
             border: `1px solid ${kit(theme).line.soft}`,
             borderRadius: '12px',
             p: { xs: '14px', sm: '18px' },

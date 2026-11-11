@@ -235,6 +235,13 @@ const sharedComponents = (mode: PaletteMode) => ({
         fontSize: '0.75rem',
         fontWeight: 500,
       }),
+      // MUI paints pinned headers in the page colour, which shows as a dark
+      // band across a card. Use the surface the table sits on instead:
+      // containers that paint their own surface (like Panel) publish it as
+      // --ui-surface, and plain paper is the fallback.
+      stickyHeader: ({ theme }: { theme: Theme }) => ({
+        backgroundColor: `var(--ui-surface, ${theme.palette.background.paper})`,
+      }),
     },
   },
   MuiTooltip: {
