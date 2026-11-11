@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { ConfirmDialogProvider, useConfirm } from './ConfirmDialog';
+import userEvent from '@testing-library/user-event';
+import { ConfirmDialogProvider, useConfirm, type ConfirmOptions } from './ConfirmDialog';
 
 function Trigger({ onResult }: { onResult: (confirmed: boolean) => void }) {
   const confirm = useConfirm();
@@ -103,6 +104,52 @@ describe('<ConfirmDialog>', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'open' }));
     expect(await screen.findByRole('dialog', { name: 'Sure?' })).toBeInTheDocument();
+  });
+
+  async function openWith(options: ConfirmOptions) {
+    let confirm!: ReturnType<typeof useConfirm>;
+    const Grab = () => { confirm = useConfirm(); return null; };
+    render(
+      <ConfirmDialogProvider>
+        <Grab />
+      </ConfirmDialogProvider>,
+    );
+    let pending!: Promise<boolean>;
+    act(() => { pending = confirm(options); });
+    await screen.findByRole('dialog');
+    // Wrapped, or awaiting this helper would wait for the answer too.
+    return { pending };
+  }
+
+  it('focuses Cancel on a destructive prompt, so Enter backs out', async () => {
+    const { pending } = await openWith({ message: 'Delete this record?', destructive: true });
+    expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(pending).resolves.toBe(false);
+  });
+
+  it('focuses Confirm on a non-destructive prompt, so Enter goes ahead', async () => {
+    const { pending } = await openWith({ message: 'Send the reminder?' });
+    expect(screen.getByRole('button', { name: 'Confirm' })).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(pending).resolves.toBe(true);
+  });
+
+  it('lets the caller choose the focused button', async () => {
+    await openWith({ message: 'Delete this record?', destructive: true, focus: 'confirm' });
+    expect(screen.getByRole('button', { name: 'Confirm' })).toHaveFocus();
+  });
+
+  it('can focus Cancel on a non-destructive prompt too', async () => {
+    await openWith({ message: 'Send the reminder?', focus: 'cancel' });
+    expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+  });
+
+  it('keeps the dialog compact and full width', async () => {
+    await openWith({ message: 'Sure?' });
+    const paper = screen.getByRole('dialog');
+    expect(paper).toHaveClass('MuiDialog-paperWidthXs');
+    expect(paper).toHaveClass('MuiDialog-paperFullWidth');
   });
 
   it('throws if useConfirm is used outside the provider', () => {
