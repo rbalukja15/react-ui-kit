@@ -1,5 +1,15 @@
 # @rbalukja15/ui-components
 
+## 0.5.0
+
+### Minor Changes
+
+- 8d1509d: `ConfirmDialog` now focuses Cancel when `destructive` is set, so a reflexive Enter no longer confirms a delete. Non-destructive prompts still focus Confirm, and the new `focus: 'confirm' | 'cancel'` option picks the button explicitly. The dialog is also `maxWidth="xs" fullWidth`, compact on desktop and full width on phones.
+
+### Patch Changes
+
+- 56f127a: Pinned table headers (`stickyHeader`, including `DataTable`) now take the colour of the card they sit on instead of the page colour, which showed as a dark band in dark mode. Panel publishes its surface as `--ui-surface`; elsewhere the header falls back to `background.paper`.
+
 ## 0.4.0
 
 ### Minor Changes
