@@ -253,5 +253,9 @@ describe('MuiCssBaseline', () => {
     expect(html.colorScheme).toBe(mode);
     expect(html.scrollbarColor).toMatch(/ transparent$/);
   });
-});
 
+  it('cancels the scroll-lock padding a modal adds to body', () => {
+    const body = (createAppTheme().components?.MuiCssBaseline?.styleOverrides as { body: Record<string, string> }).body;
+    expect(body.paddingRight).toBe('0 !important');
+  });
+});
