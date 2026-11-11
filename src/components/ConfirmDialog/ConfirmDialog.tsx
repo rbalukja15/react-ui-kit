@@ -10,8 +10,16 @@ export interface ConfirmOptions {
   message?: React.ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
-  /** Style the confirm button as a destructive action. */
+  /**
+   * Style the confirm button as a destructive action. Focus then starts on
+   * Cancel, so a reflexive Enter doesn't delete anything.
+   */
   destructive?: boolean;
+  /**
+   * Which button has focus when the dialog opens. Defaults to `'cancel'`
+   * for destructive prompts and `'confirm'` otherwise.
+   */
+  focus?: 'confirm' | 'cancel';
 }
 
 type Resolver = (confirmed: boolean) => void;
@@ -64,12 +72,16 @@ export function ConfirmDialogProvider({
     resolverRef.current = null;
   }, []);
 
+  const focus = opts.focus ?? (opts.destructive ? 'cancel' : 'confirm');
+
   return (
     <ConfirmContext.Provider value={confirm}>
       {children}
       <Dialog
         open={open}
         onClose={() => settle(false)}
+        maxWidth="xs"
+        fullWidth
         // Name the dialog by its title, or by its message when there is no
         // title, so screen readers never announce an unlabelled dialog.
         aria-labelledby={opts.title ? titleId : opts.message ? messageId : undefined}
@@ -82,12 +94,14 @@ export function ConfirmDialogProvider({
           </DialogContent>
         )}
         <DialogActions>
-          <Button onClick={() => settle(false)}>{opts.cancelLabel ?? defaultCancelLabel}</Button>
+          <Button onClick={() => settle(false)} autoFocus={focus === 'cancel'}>
+            {opts.cancelLabel ?? defaultCancelLabel}
+          </Button>
           <Button
             onClick={() => settle(true)}
             variant="contained"
             color={opts.destructive ? 'error' : 'primary'}
-            autoFocus
+            autoFocus={focus === 'confirm'}
           >
             {opts.confirmLabel ?? defaultConfirmLabel}
           </Button>
