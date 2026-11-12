@@ -1,7 +1,8 @@
 import * as React from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { act } from 'react';
+import { createPortal } from 'react-dom';
 import { useUrlState } from '../../hooks/useUrlState';
 import { createLaggingRouter } from '../../hooks/testing/createLaggingRouter';
 import { DataTable, type DataTableColumn, type DataTableProps } from './DataTable';
@@ -397,6 +398,148 @@ describe('<DataTable>', () => {
     expect(css(header)).toMatch(/min-width:\s*1536px/);
     expect(css(screen.getByText('London').closest('td')!)).toMatch(/display:\s*none/);
     expect(css(screen.getByRole('columnheader', { name: /Age/ }))).not.toMatch(/display:\s*none/);
+  });
+
+  describe('clickable rows', () => {
+    function clickable() {
+      const onRowClick = vi.fn();
+      const onEdit = vi.fn();
+      const ctx = setup({
+        onRowClick,
+        selectable: true,
+        getRowLabel: (p) => p.name,
+        columns: [...columns, { id: 'link', header: 'Link', cell: (p) => <a href={`#${p.id}`}>Profile of {p.name}</a> }],
+        rowActions: (p) => (
+          <button type="button" onClick={() => onEdit(p.id)}>
+            Edit {p.name}
+          </button>
+        ),
+      });
+      return { ...ctx, onRowClick, onEdit };
+    }
+
+    it('reports a click anywhere on a row with that row', async () => {
+      const { user, onRowClick } = clickable();
+      await user.click(screen.getByText('London'));
+      expect(onRowClick).toHaveBeenCalledTimes(1);
+      expect(onRowClick).toHaveBeenCalledWith(people[0]);
+    });
+
+    it('leaves clicks on the row actions, its checkbox and links in its cells alone', async () => {
+      const { user, onRowClick, onEdit } = clickable();
+      await user.click(screen.getByRole('button', { name: 'Edit Ada' }));
+      expect(onEdit).toHaveBeenCalledWith(1);
+      // The actions cell around the button, too: a near miss must not open the row.
+      await user.click(screen.getByRole('button', { name: 'Edit Ada' }).closest('td')!);
+      await user.click(screen.getByRole('checkbox', { name: 'Select Ada' }));
+      await user.click(screen.getByRole('link', { name: 'Profile of Ada' }));
+      expect(onRowClick).not.toHaveBeenCalled();
+    });
+
+    it('leaves a click that ends a text selection alone, so text can be copied from a row', () => {
+      const { onRowClick } = clickable();
+      const cell = screen.getByText('London');
+      const range = document.createRange();
+      range.selectNodeContents(cell);
+      window.getSelection()!.removeAllRanges();
+      window.getSelection()!.addRange(range);
+      fireEvent.click(cell);
+      expect(onRowClick).not.toHaveBeenCalled();
+      window.getSelection()!.removeAllRanges();
+      fireEvent.click(cell);
+      expect(onRowClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves clicks inside a portal opened from a row alone', async () => {
+      const onRowClick = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <DataTable
+          rows={people.slice(0, 1)}
+          columns={[{ id: 'name', header: 'Name', cell: (p) => createPortal(<span>Menu for {p.name}</span>, document.body) }]}
+          getRowId={(p) => p.id}
+          label="People"
+          onRowClick={onRowClick}
+        />,
+      );
+      await user.click(screen.getByText('Menu for Ada'));
+      expect(onRowClick).not.toHaveBeenCalled();
+    });
+  });
+
+  it('can start a column on a descending sort', async () => {
+    const onSortChange = vi.fn();
+    const { user, table } = setup({
+      columns: [columns[0]!, { ...columns[1]!, sortFirst: 'desc' }, columns[2]!],
+      onSortChange,
+    });
+    const age = () => within(table).getByRole('button', { name: /Age/ });
+    await user.click(age());
+    expect(onSortChange).toHaveBeenLastCalledWith({ columnId: 'age', direction: 'desc' });
+    expect(names(table, 1)).toEqual(['85', '72', '41', '36', '']);
+    await user.click(age());
+    expect(onSortChange).toHaveBeenLastCalledWith({ columnId: 'age', direction: 'asc' });
+    await user.click(age());
+    expect(onSortChange).toHaveBeenLastCalledWith(null);
+  });
+
+  describe('layout', () => {
+    // jsdom doesn't lay anything out, so read the CSS emotion generated.
+    const css = (el: Element) => {
+      const classes = [...el.classList].filter((c) => c.startsWith('css-'));
+      return [...document.querySelectorAll('style')]
+        .map((s) => s.textContent ?? '')
+        .join('')
+        .split('}')
+        .filter((rule) => classes.some((c) => rule.includes(c)))
+        .join('}');
+    };
+
+    it("styles a column's header and cells with cellSx, and takes a responsive width", () => {
+      setup({
+        columns: [
+          columns[0]!,
+          { ...columns[1]!, cellSx: { whiteSpace: 'nowrap' }, width: { xs: 108, md: 124 } },
+          columns[2]!,
+        ],
+      });
+      const header = screen.getByRole('columnheader', { name: /Age/ });
+      expect(css(header)).toMatch(/white-space:\s*nowrap/);
+      expect(css(header)).toMatch(/width:\s*108px/);
+      expect(css(header)).toMatch(/min-width:\s*900px\)\s*\{[^}]*width:\s*124px/);
+      expect(css(screen.getByText('85').closest('td')!)).toMatch(/white-space:\s*nowrap/);
+      expect(css(screen.getByRole('columnheader', { name: /Name/ }))).not.toMatch(/white-space/);
+    });
+
+    it('passes tableSx and containerSx through, and sizes the actions column', () => {
+      setup({
+        tableSx: { tableLayout: 'fixed' },
+        containerSx: { overscrollBehavior: 'contain' },
+        rowActions: () => <button type="button">Edit</button>,
+        actionsWidth: 88,
+      });
+      const table = screen.getByRole('table', { name: 'People' });
+      expect(css(table)).toMatch(/table-layout:\s*fixed/);
+      expect(css(table.parentElement!)).toMatch(/overscroll-behavior:\s*contain/);
+      expect(css(within(table).getAllByRole('columnheader').at(-1)!)).toMatch(/width:\s*88px/);
+    });
+
+    it('scrolls the rows back to the top on a new page', async () => {
+      const { user, table } = setup({ pageSizeOptions: [2], maxHeight: 200 });
+      const container = table.parentElement!;
+      container.scrollTop = 120;
+      expect(container.scrollTop).toBe(120);
+      await user.click(screen.getByRole('button', { name: 'Go to next page' }));
+      expect(container.scrollTop).toBe(0);
+    });
+
+    it('keeps a focused row clear of a pinned header, rounding its height up', () => {
+      const box = { height: 55.83, width: 0, top: 0, left: 0, right: 0, bottom: 55.83, x: 0, y: 0, toJSON: () => ({}) };
+      vi.spyOn(HTMLTableSectionElement.prototype, 'getBoundingClientRect').mockReturnValue(box);
+      const { table } = setup({ stickyHeader: true, maxHeight: 200 });
+      expect(table.parentElement!.style.scrollPaddingTop).toBe('56px');
+      vi.restoreAllMocks();
+    });
   });
 });
 

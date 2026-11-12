@@ -59,6 +59,15 @@ describe('<DataTable> accessibility', () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
+  it('has no axe violations with clickable rows and a descending-first column', async () => {
+    const { container } = renderTable({
+      onRowClick: () => {},
+      columns: [columns[0]!, { ...columns[1]!, sortFirst: 'desc', cellSx: { px: 1 } }],
+      tableSx: { tableLayout: 'fixed' },
+    });
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
   it('has no axe violations with the columns menu open', async () => {
     renderTable();
     fireEvent.click(screen.getByRole('button', { name: 'Columns' }));

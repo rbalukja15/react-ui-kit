@@ -20,7 +20,7 @@ import {
   TableSortLabel,
   Typography,
 } from '@mui/material';
-import type { Breakpoint } from '@mui/material/styles';
+import type { Breakpoint, SxProps, Theme } from '@mui/material/styles';
 import { EmptyState } from '../EmptyState';
 import { RowActions } from '../RowActions';
 import { sortRows, type DataTableSort, type SortValue } from './sortRows';
@@ -28,9 +28,24 @@ import { useControllable } from './useControllable';
 
 export type DataTableRowId = string | number;
 
+/** A size for every screen, or one per breakpoint, e.g. `{ xs: 108, md: 124 }`. */
+export type DataTableWidth = number | string | Partial<Record<Breakpoint, number | string>>;
+
 // `display` for a column with `hideBelow`, shared by its header and cells.
 const responsive = (column: { hideBelow?: Breakpoint }) =>
   column.hideBelow ? { display: { xs: 'none', [column.hideBelow]: 'table-cell' } } : undefined;
+
+/** Joins sx values into the array form MUI accepts, dropping empty ones. */
+function joinSx(...parts: Array<SxProps<Theme> | false | undefined>): SxProps<Theme> {
+  return parts.flatMap((part) => (!part ? [] : Array.isArray(part) ? part : [part])) as SxProps<Theme>;
+}
+
+// Clicks on these, inside a row, are their own and do not open the row.
+// A literal, not built at load: a call here would stop bundlers dropping
+// this module from apps that import other components only.
+const INTERACTIVE =
+  'a, button, input, select, textarea, label, [role="button"], [role="checkbox"], [role="link"], ' +
+  '[role="menuitem"], [data-datatable-no-row-click]';
 
 export interface DataTableColumn<Row> {
   /** Unique key. Also the row property shown and sorted by when `cell` and `sortValue` are left out. */
@@ -43,9 +58,17 @@ export interface DataTableColumn<Row> {
   sortable?: boolean;
   /** The value client-side sorting compares. Defaults to `row[id]`. */
   sortValue?: (row: Row) => SortValue;
+  /**
+   * Direction of the first click on the column's sort control. Defaults to
+   * `'asc'`; `'desc'` suits figures where the largest matter most, such as an
+   * amount owed. Either way the next click flips it and the third clears it.
+   */
+  sortFirst?: 'asc' | 'desc';
   align?: 'left' | 'center' | 'right';
-  /** Fixed column width, e.g. `120` or `'20%'`. */
-  width?: number | string;
+  /** Fixed column width, e.g. `120`, `'20%'` or `{ xs: 108, md: 124 }`. */
+  width?: DataTableWidth;
+  /** Styles for the column's header and body cells alike, such as tighter padding. */
+  cellSx?: SxProps<Theme>;
   /** Whether the columns menu can hide it. Defaults to `true`. */
   hideable?: boolean;
   /**
@@ -154,6 +177,18 @@ export interface DataTableProps<Row> {
 
   /** Buttons for each row, shown in a right-aligned last column. */
   rowActions?: (row: Row) => React.ReactNode;
+  /** Width of the row actions column, e.g. `88`. */
+  actionsWidth?: DataTableWidth;
+  /**
+   * Called when a row is clicked anywhere other than on something
+   * interactive in it: its actions, its checkbox, or a link, button or field
+   * in a cell, or a click that ends a text selection. Rows then show a pointer.
+   *
+   * This is a mouse shortcut only, since a table row cannot take focus: give
+   * each row a link or button to the same place too, for example in
+   * `rowActions`.
+   */
+  onRowClick?: (row: Row) => void;
   /** Replaces the default "No results" empty state. */
   emptyState?: React.ReactNode;
   /** Content at the start of the toolbar, such as a search field or bulk actions. */
@@ -166,6 +201,10 @@ export interface DataTableProps<Row> {
   maxHeight?: number | string;
   size?: 'small' | 'medium';
   labels?: Partial<DataTableLabels>;
+  /** Styles for the `<table>`, e.g. `{ tableLayout: 'fixed', minWidth: 600 }`. */
+  tableSx?: SxProps<Theme>;
+  /** Styles for the scroll container around the table, e.g. a `maxHeight` behind a media query. */
+  containerSx?: SxProps<Theme>;
 }
 
 const EMPTY: readonly never[] = [];
@@ -297,6 +336,8 @@ export function DataTable<Row>({
   defaultHiddenColumns = EMPTY,
   onHiddenColumnsChange,
   rowActions,
+  actionsWidth,
+  onRowClick,
   emptyState,
   toolbar,
   footer,
@@ -304,6 +345,8 @@ export function DataTable<Row>({
   maxHeight,
   size = 'medium',
   labels: labelOverrides,
+  tableSx,
+  containerSx,
 }: DataTableProps<Row>) {
   const labels = { ...defaultLabels, ...labelOverrides };
   const isServer = mode === 'server';
@@ -379,10 +422,13 @@ export function DataTable<Row>({
     }
   };
 
-  const changeSort = (columnId: string) => {
-    // Unsorted, then ascending, then descending, then back to unsorted.
-    if (sort?.columnId !== columnId) setSort({ columnId, direction: 'asc' });
-    else if (sort.direction === 'asc') setSort({ columnId, direction: 'desc' });
+  const changeSort = (column: DataTableColumn<Row>) => {
+    // Unsorted, then the column's first direction, then the other one, then
+    // back to unsorted.
+    const first = column.sortFirst ?? 'asc';
+    const columnId = column.id;
+    if (sort?.columnId !== columnId) setSort({ columnId, direction: first });
+    else if (sort.direction === first) setSort({ columnId, direction: first === 'asc' ? 'desc' : 'asc' });
     else setSort(null);
     if (currentPage !== 0) setPage(0);
   };
@@ -402,6 +448,52 @@ export function DataTable<Row>({
   // are already listening when the first selection changes its text.
   const showToolbar = Boolean(toolbar) || columnsMenu || selectable;
   const placeholderRows = Math.min(pageSize, 10);
+
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  // A new page starts at its first row. Without this a cached page that
+  // renders without remounting opens at the previous page's scroll offset.
+  const firstPage = React.useRef(true);
+  React.useEffect(() => {
+    if (firstPage.current) {
+      firstPage.current = false;
+      return;
+    }
+    if (containerRef.current) containerRef.current.scrollTop = 0;
+  }, [currentPage, pageSize]);
+
+  // With the header pinned, a row that gets focus (Tab, find in page) scrolls
+  // into view below the header rather than under it.
+  React.useEffect(() => {
+    const container = containerRef.current;
+    const head = container?.querySelector('thead');
+    if (!stickyHeader || !container || !head) return undefined;
+    const sync = () => {
+      // Rounded up: a fractional height can be stored a hair short, and a
+      // row would then stop under the header's last pixel.
+      container.style.scrollPaddingTop = `${Math.ceil(head.getBoundingClientRect().height)}px`;
+    };
+    sync();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(sync);
+    observer.observe(head);
+    return () => observer.disconnect();
+  }, [stickyHeader]);
+
+  const rowClickHandler = (row: Row) =>
+    onRowClick
+      ? (event: React.MouseEvent<HTMLTableRowElement>) => {
+          const target = event.target as Element;
+          // React bubbles events out of portals (a menu or dialog opened from
+          // the row), but their DOM is not inside the row.
+          if (!event.currentTarget.contains(target)) return;
+          // A drag that selects text, to copy a name or a number, ends in a
+          // click too. Opening the row would throw the selection away.
+          if (window.getSelection()?.toString()) return;
+          const interactive = target.closest(INTERACTIVE);
+          if (interactive && event.currentTarget.contains(interactive)) return;
+          onRowClick(row);
+        }
+      : undefined;
 
   return (
     <Box>
@@ -451,11 +543,12 @@ export function DataTable<Row>({
         </Box>
       )}
       <TableContainer
-        sx={{ maxHeight }}
+        ref={containerRef}
+        sx={joinSx({ maxHeight }, containerSx)}
         // A scrolling region must be reachable by keyboard to be scrolled.
         {...(maxHeight !== undefined ? { tabIndex: 0, role: 'region', 'aria-label': label } : {})}
       >
-        <Table aria-label={label} aria-busy={loading || undefined} stickyHeader={stickyHeader} size={size}>
+        <Table aria-label={label} aria-busy={loading || undefined} stickyHeader={stickyHeader} size={size} sx={tableSx}>
           <TableHead>
             <TableRow>
               {selectable && (
@@ -477,11 +570,15 @@ export function DataTable<Row>({
                   <TableCell
                     key={column.id}
                     align={column.align}
-                    sx={{ width: column.width, ...responsive(column) }}
+                    sx={joinSx({ width: column.width, ...responsive(column) }, column.cellSx)}
                     aria-sort={column.sortable ? (active ? (direction === 'asc' ? 'ascending' : 'descending') : 'none') : undefined}
                   >
                     {column.sortable ? (
-                      <TableSortLabel active={active} direction={direction} onClick={() => changeSort(column.id)}>
+                      <TableSortLabel
+                        active={active}
+                        direction={active ? direction : (column.sortFirst ?? 'asc')}
+                        onClick={() => changeSort(column)}
+                      >
                         {column.header}
                         {active && (
                           <Box component="span" sx={visuallyHidden}>
@@ -496,7 +593,7 @@ export function DataTable<Row>({
                 );
               })}
               {rowActions && (
-                <TableCell align="right">
+                <TableCell align="right" sx={actionsWidth === undefined ? undefined : { width: actionsWidth }}>
                   <Box component="span" sx={visuallyHidden}>
                     {labels.actions}
                   </Box>
@@ -526,9 +623,15 @@ export function DataTable<Row>({
                 const id = getRowId(row);
                 const isSelected = selectedSet.has(id);
                 return (
-                  <TableRow key={id} hover selected={isSelected}>
+                  <TableRow
+                    key={id}
+                    hover
+                    selected={isSelected}
+                    onClick={rowClickHandler(row)}
+                    sx={onRowClick ? { cursor: 'pointer' } : undefined}
+                  >
                     {selectable && (
-                      <TableCell padding="checkbox">
+                      <TableCell padding="checkbox" data-datatable-no-row-click="">
                         <LabelledCheckbox
                           id={`${idPrefix}-row-${index}`}
                           label={labels.selectRow(getRowLabel ? getRowLabel(row) : String(id))}
@@ -538,12 +641,12 @@ export function DataTable<Row>({
                       </TableCell>
                     )}
                     {visibleColumns.map((column) => (
-                      <TableCell key={column.id} align={column.align} sx={responsive(column)}>
+                      <TableCell key={column.id} align={column.align} sx={joinSx(responsive(column), column.cellSx)}>
                         {column.cell ? column.cell(row) : defaultCell(readProperty(row, column.id))}
                       </TableCell>
                     ))}
                     {rowActions && (
-                      <TableCell align="right" padding="none" sx={{ pr: 1 }}>
+                      <TableCell align="right" padding="none" sx={{ pr: 1 }} data-datatable-no-row-click="">
                         <RowActions>{rowActions(row)}</RowActions>
                       </TableCell>
                     )}

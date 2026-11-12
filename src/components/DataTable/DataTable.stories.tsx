@@ -161,6 +161,50 @@ export const FullFeatured: Story = {
 };
 
 /**
+ * Rows that open a record: click anywhere on a row except its actions. The
+ * table is fixed-layout, so a long name truncates instead of pushing the
+ * actions off-screen, and Total sorts largest first.
+ */
+function ClickableRowsDemo(args: TableArgs) {
+  const [opened, setOpened] = React.useState<string | null>(null);
+  const clickableColumns = columns.map((c) =>
+    c.id === 'total'
+      ? { ...c, sortFirst: 'desc' as const, width: { xs: 96, md: 120 }, cellSx: { px: 1, whiteSpace: 'nowrap' } }
+      : c,
+  );
+  return (
+    <Stack spacing={1}>
+      <DataTable
+        {...args}
+        columns={clickableColumns}
+        onRowClick={(o) => setOpened(o.id)}
+        tableSx={{ tableLayout: 'fixed', minWidth: { md: 600 } }}
+        actionsWidth={64}
+        rowActions={(o) => (
+          <IconButton size="small" aria-label={`Edit order ${o.id}`}>
+            <EditIcon />
+          </IconButton>
+        )}
+      />
+      <Typography variant="body2" role="status">
+        {opened ? `Opened ${opened}` : 'Click a row'}
+      </Typography>
+    </Stack>
+  );
+}
+
+export const ClickableRows: Story = {
+  render: (args) => <ClickableRowsDemo {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Edit order ORD-1040' }));
+    await expect(canvas.getByRole('status')).toHaveTextContent('Click a row');
+    await userEvent.click(canvas.getAllByRole('row')[1]!.querySelector('td')!);
+    await expect(canvas.getByRole('status')).toHaveTextContent('Opened ORD-1040');
+  },
+};
+
+/**
  * A pinned header inside a `Panel` takes the panel's card colour, so rows
  * scrolling underneath don't show through and no page-coloured band appears.
  */
