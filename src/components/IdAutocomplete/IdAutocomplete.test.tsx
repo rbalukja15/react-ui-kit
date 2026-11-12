@@ -214,6 +214,14 @@ describe('<IdAutocomplete>', () => {
       expect(screen.getByRole('option', { name: 'Grace Hopper' }).closest('[role="group"]')).toBeNull();
     });
 
+    it('pins the header flush with the top of the listbox', () => {
+      render(<Picker options={[{ id: 3, label: 'Alan Turing', group: 'Recent' }]} />);
+      openList();
+      const header = screen.getByRole('listbox').querySelector('.MuiListSubheader-root')!;
+      // The listbox's 8px top padding would otherwise leave a gap above it.
+      expect(getComputedStyle(header).top).toBe('-8px');
+    });
+
     it('keeps the header over the grouped options when a record is pinned', () => {
       const warn = vi.spyOn(console, 'warn');
       const grouped = [
