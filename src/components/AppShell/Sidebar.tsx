@@ -133,7 +133,17 @@ export function Sidebar({
           <Divider sx={(theme: Theme) => ({ borderColor: kit(theme).nav.line })} />
         </>
       )}
-      <Box sx={{ flexGrow: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+      {/* Scrolls when the list outgrows the window, without a bar down the
+          rail: wheel, trackpad, touch and keyboard still scroll it. */}
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
+        }}
+      >
         <List sx={{ px: 1, py: 2 }}>{items.map((item, i) => renderItem(item, i === active, mini))}</List>
       </Box>
       {footerItems && footerItems.length > 0 && (
