@@ -182,7 +182,7 @@ export interface DataTableProps<Row> {
   /**
    * Called when a row is clicked anywhere other than on something
    * interactive in it: its actions, its checkbox, or a link, button or field
-   * in a cell. Rows then show a pointer.
+   * in a cell, or a click that ends a text selection. Rows then show a pointer.
    *
    * This is a mouse shortcut only, since a table row cannot take focus: give
    * each row a link or button to the same place too, for example in
@@ -486,6 +486,9 @@ export function DataTable<Row>({
           // React bubbles events out of portals (a menu or dialog opened from
           // the row), but their DOM is not inside the row.
           if (!event.currentTarget.contains(target)) return;
+          // A drag that selects text, to copy a name or a number, ends in a
+          // click too. Opening the row would throw the selection away.
+          if (window.getSelection()?.toString()) return;
           const interactive = target.closest(INTERACTIVE);
           if (interactive && event.currentTarget.contains(interactive)) return;
           onRowClick(row);

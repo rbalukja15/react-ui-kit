@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { act } from 'react';
 import { createPortal } from 'react-dom';
@@ -434,6 +434,20 @@ describe('<DataTable>', () => {
       await user.click(screen.getByRole('checkbox', { name: 'Select Ada' }));
       await user.click(screen.getByRole('link', { name: 'Profile of Ada' }));
       expect(onRowClick).not.toHaveBeenCalled();
+    });
+
+    it('leaves a click that ends a text selection alone, so text can be copied from a row', () => {
+      const { onRowClick } = clickable();
+      const cell = screen.getByText('London');
+      const range = document.createRange();
+      range.selectNodeContents(cell);
+      window.getSelection()!.removeAllRanges();
+      window.getSelection()!.addRange(range);
+      fireEvent.click(cell);
+      expect(onRowClick).not.toHaveBeenCalled();
+      window.getSelection()!.removeAllRanges();
+      fireEvent.click(cell);
+      expect(onRowClick).toHaveBeenCalledTimes(1);
     });
 
     it('leaves clicks inside a portal opened from a row alone', async () => {
