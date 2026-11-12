@@ -134,7 +134,9 @@ export function Sidebar({
         </>
       )}
       {/* Scrolls when the list outgrows the window, without a bar down the
-          rail: wheel, trackpad, touch and keyboard still scroll it. */}
+          rail: wheel, trackpad, touch and keyboard still scroll it. Trade-off,
+          accepted on purpose: nothing marks that more items sit below the fold.
+          Both the mobile and the permanent drawer render this list. */}
       <Box
         sx={{
           flexGrow: 1,
