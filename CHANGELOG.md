@@ -1,5 +1,11 @@
 # @rbalukja15/ui-components
 
+## 0.5.1
+
+### Patch Changes
+
+- d3a3373: Opening a `Menu`, `Popover` or `Dialog` no longer shifts the page by the scrollbar width. The theme reserves the scrollbar gutter on `html`, so `MuiCssBaseline` now cancels the extra `padding-right` MUI's scroll lock adds to `body` and to `.mui-fixed` elements such as a fixed `AppBar`. Apps that carried their own `body { padding-right: 0 !important }` workaround can drop it.
+
 ## 0.5.0
 
 ### Minor Changes
