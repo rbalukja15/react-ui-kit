@@ -253,5 +253,10 @@ describe('MuiCssBaseline', () => {
     expect(html.colorScheme).toBe(mode);
     expect(html.scrollbarColor).toMatch(/ transparent$/);
   });
-});
 
+  it('cancels the scroll-lock padding a modal adds to body and fixed elements', () => {
+    const overrides = createAppTheme().components?.MuiCssBaseline?.styleOverrides as Record<string, Record<string, string>>;
+    expect(overrides.body.paddingRight).toBe('0 !important');
+    expect(overrides['.mui-fixed'].paddingRight).toBe('0 !important');
+  });
+});

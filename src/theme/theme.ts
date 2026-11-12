@@ -122,12 +122,23 @@ const sharedComponents = (mode: PaletteMode) => ({
   // than the OS, so native scrollbars and form controls never turn dark on
   // a light page (or the other way round). `scrollbar-color` is inherited,
   // so it reaches tables and other scroll areas too.
+  // MUI's modal scroll lock pads `body` by the scrollbar width, but with a
+  // stable gutter that space is already reserved, so the padding would
+  // shrink the page each time a Menu, Popover or Dialog opens. Cancel it,
+  // and the same padding on `.mui-fixed` elements (a fixed AppBar). Both
+  // rules are global, so an app's own right padding on these is overridden.
   MuiCssBaseline: {
     styleOverrides: {
       html: {
         scrollbarGutter: 'stable',
         colorScheme: mode,
         scrollbarColor: `${mode === 'light' ? 'rgba(40,38,31,0.28)' : 'rgba(237,232,220,0.28)'} transparent`,
+      },
+      body: {
+        paddingRight: '0 !important',
+      },
+      '.mui-fixed': {
+        paddingRight: '0 !important',
       },
     },
   },
