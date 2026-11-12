@@ -1,5 +1,11 @@
 # @rbalukja15/ui-components
 
+## 0.5.2
+
+### Patch Changes
+
+- 221bdc6: `IdAutocomplete`'s pinned group headers now sit flush with the top of the listbox. They stuck 8px below it, below MUI's listbox padding, so scrolled rows showed through the strip above them. Apps that set `.MuiAutocomplete-listbox .MuiListSubheader-sticky { top: -8px }` as a workaround can drop it.
+
 ## 0.5.1
 
 ### Patch Changes
