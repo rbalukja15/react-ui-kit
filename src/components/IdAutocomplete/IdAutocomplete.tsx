@@ -321,7 +321,9 @@ export function IdAutocomplete<TOption extends IdOption = IdOption>({
               params.group ? (
                 <li key={params.key} role="none">
                   <div role="group" aria-labelledby={`${groupId}-${params.key}`}>
-                    <ListSubheader id={`${groupId}-${params.key}`} component="div" sx={{ lineHeight: '32px' }}>
+                    {/* MUI pads the listbox 8px at the top, so a header pinned at
+                        top: 0 leaves a strip that scrolled rows show through. */}
+                    <ListSubheader id={`${groupId}-${params.key}`} component="div" sx={{ lineHeight: '32px', top: -8 }}>
                       {params.group}
                     </ListSubheader>
                     <ul role="none" style={{ padding: 0 }}>
