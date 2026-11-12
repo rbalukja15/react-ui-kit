@@ -317,6 +317,19 @@ describe('<AppShell>', () => {
     expect(screen.getByRole('button', { name: 'Seitenleiste einklappen' })).toBeInTheDocument();
   });
 
+  it('scrolls a long nav list without drawing a scrollbar down the rail', () => {
+    render(<AppShell navItems={navItems}>x</AppShell>);
+    const list = within(sidebar()).getByRole('list').parentElement!;
+    expect(getComputedStyle(list).overflowY).toBe('auto');
+    // jsdom has no layout and drops unknown properties, so read the rules
+    // emotion wrote for the list's own class.
+    const cls = [...list.classList].find((c) => c.startsWith('css-'))!;
+    const css = [...document.querySelectorAll('style')].map((s) => s.textContent ?? '').join('');
+    const rules = css.split('}').filter((rule) => rule.includes(`.${cls}`));
+    expect(rules.join('}')).toMatch(/scrollbar-width:none/);
+    expect(rules.find((rule) => rule.includes('::-webkit-scrollbar'))).toMatch(/display:none/);
+  });
+
   describe('sidebar colours', () => {
     function color(value: string) {
       const el = document.createElement('div');
