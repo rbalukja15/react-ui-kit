@@ -399,3 +399,31 @@ export const Localised: Story = {
     },
   },
 };
+
+const manyOrders: Order[] = Array.from({ length: 312 }, (_, i) => ({ ...orders[i % orders.length]!, id: `ORD-${2000 + i}` }));
+
+/**
+ * On a phone the pager drops its "Rows per page" label and most of its gaps,
+ * so the page-size select, the range and both arrows fit a list card on a
+ * 360px screen without scrolling sideways. Switch to a small mobile viewport
+ * to see it.
+ */
+export const PhonePager: Story = {
+  args: { rows: manyOrders, defaultPageSize: 20, pageSizeOptions: [20, 50, 100] },
+  render: (args) => (
+    <Panel>
+      <DataTable {...args} columns={columns.slice(0, 2)} />
+    </Panel>
+  ),
+  parameters: { viewport: { defaultViewport: 'mobile2' }, testRunner: { viewportWidth: 360 } },
+  play: async ({ canvasElement }) => {
+    const pager = canvasElement.querySelector<HTMLElement>('.MuiTablePagination-root')!;
+    const toolbar = pager.querySelector<HTMLElement>('.MuiTablePagination-toolbar')!;
+    await expect(toolbar.scrollWidth).toBeLessThanOrEqual(pager.clientWidth);
+    await expect(pager.scrollWidth).toBeLessThanOrEqual(pager.clientWidth);
+    const next = within(pager).getByRole('button', { name: 'Go to next page' });
+    await expect(next.getBoundingClientRect().right).toBeLessThanOrEqual(pager.getBoundingClientRect().right + 0.5);
+    // The label is hidden from sight only: the select keeps it as its name.
+    await expect(within(pager).getByRole('combobox', { name: /Rows per page/ })).toBeInTheDocument();
+  },
+};

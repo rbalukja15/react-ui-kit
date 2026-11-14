@@ -1,10 +1,21 @@
 import type { TestRunnerConfig } from '@storybook/test-runner';
 import { getStoryContext } from '@storybook/test-runner';
 import { checkA11y, injectAxe } from 'axe-playwright';
+import type { Page } from 'playwright';
 
 // The colour mode to test in. CI runs the suite once per mode, since
 // contrast is checked separately for the light and the dark palette.
 const mode = process.env.STORYBOOK_MODE === 'dark' ? 'dark' : 'light';
+
+// The window size before a story narrowed it, restored after that story.
+// The runner skips postVisit when a play test fails, so preVisit restores
+// it too, or one failure would leave every later story narrow.
+let savedViewport: { width: number; height: number } | null = null;
+
+async function restoreViewport(page: Page) {
+  if (savedViewport) await page.setViewportSize(savedViewport);
+  savedViewport = null;
+}
 
 // Runs every story in a real browser: its play function, if it has one,
 // then an axe scan of what the story rendered.
@@ -16,24 +27,41 @@ const config: TestRunnerConfig = {
     url.searchParams.set('globals', `mode:${mode}`);
     await page.goto(url.toString(), { waitUntil: 'load' });
   },
-  async preVisit(page) {
+  async preVisit(page, context) {
+    // A story that must be checked at a phone width names it, e.g.
+    // `parameters: { testRunner: { viewportWidth: 360 } }`; media queries
+    // follow the browser window, so a narrow wrapper alone is not enough.
+    await restoreViewport(page);
+    const story = await getStoryContext(page, context);
+    const width = story.parameters?.testRunner?.viewportWidth as number | undefined;
+    if (width) {
+      savedViewport = page.viewportSize();
+      await page.setViewportSize({ width, height: 800 });
+    }
     await injectAxe(page);
   },
   async postVisit(page, context) {
     const story = await getStoryContext(page, context);
-    if (story.parameters?.a11y?.disable) return;
-    // The whole document, so dialogs and menus rendered in a portal are
-    // scanned too. Only the WCAG A and AA rules: a story is a fragment, not a
-    // page, so best-practice page rules (one <main>, an <h1>) do not apply.
-    await checkA11y(page, undefined, {
-      detailedReport: true,
-      detailedReportOptions: { html: true },
-      axeOptions: {
-        runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] },
-        ...story.parameters?.a11y?.options,
-      },
-    });
+    try {
+      if (!story.parameters?.a11y?.disable) await scan(page, story.parameters?.a11y?.options);
+    } finally {
+      await restoreViewport(page);
+    }
   },
 };
+
+// The whole document, so dialogs and menus rendered in a portal are
+// scanned too. Only the WCAG A and AA rules: a story is a fragment, not a
+// page, so best-practice page rules (one <main>, an <h1>) do not apply.
+async function scan(page: Page, options: object | undefined) {
+  await checkA11y(page, undefined, {
+    detailedReport: true,
+    detailedReportOptions: { html: true },
+    axeOptions: {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] },
+      ...options,
+    },
+  });
+}
 
 export default config;

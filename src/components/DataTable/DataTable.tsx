@@ -35,6 +35,27 @@ export type DataTableWidth = number | string | Partial<Record<Breakpoint, number
 const responsive = (column: { hideBelow?: Breakpoint }) =>
   column.hideBelow ? { display: { xs: 'none', [column.hideBelow]: 'table-cell' } } : undefined;
 
+// Below `sm` the pager drops its "Rows per page" label (the select still
+// takes it as its name) and most of its gaps, so the select, the range and
+// both arrows fit a phone card. If they still don't, the arrows wrap to a
+// second line instead of scrolling the row sideways.
+const compactPager: SxProps<Theme> = (theme) => ({
+  ml: 'auto',
+  maxWidth: '100%',
+  [theme.breakpoints.down('sm')]: {
+    '& .MuiTablePagination-toolbar': {
+      flexWrap: 'wrap',
+      justifyContent: 'flex-end',
+      columnGap: 1,
+      px: 0,
+    },
+    '& .MuiTablePagination-spacer, & .MuiTablePagination-selectLabel': { display: 'none' },
+    '& .MuiTablePagination-input': { mx: 0 },
+    '& .MuiTablePagination-displayedRows': { my: 1.5 },
+    '& .MuiTablePagination-actions': { ml: 0 },
+  },
+});
+
 /** Joins sx values into the array form MUI accepts, dropping empty ones. */
 function joinSx(...parts: Array<SxProps<Theme> | false | undefined>): SxProps<Theme> {
   return parts.flatMap((part) => (!part ? [] : Array.isArray(part) ? part : [part])) as SxProps<Theme>;
@@ -677,7 +698,7 @@ export function DataTable<Row>({
               labelRowsPerPage={labels.rowsPerPage}
               labelDisplayedRows={labels.displayedRows}
               getItemAriaLabel={labels.page}
-              sx={{ ml: 'auto' }}
+              sx={compactPager}
             />
           )}
         </Box>
