@@ -192,7 +192,17 @@ export function BarChart({
           <Box
             ref={pillRef}
             component="span"
-            sx={{ position: 'absolute', top: 0, left: pillLeft, transform: pillShift, maxWidth: '100%', display: 'flex' }}
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: pillLeft,
+              transform: pillShift,
+              // Sized by its text, not by the room right of `left`, which near
+              // the last bar is a sliver and would squeeze the pill into a column.
+              width: 'max-content',
+              maxWidth: '100%',
+              display: 'flex',
+            }}
           >
             <Pill tone="primary" size="medium" sx={{ maxWidth: '100%', whiteSpace: 'normal', textAlign: 'center', fontSize: '0.75rem' }}>
               <span aria-hidden={interactive ? true : undefined}>{label}</span>

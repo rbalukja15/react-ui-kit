@@ -1,6 +1,6 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, userEvent } from '@storybook/test';
+import { expect, userEvent, waitFor } from '@storybook/test';
 import { BarChart } from './BarChart';
 import { ChartLegend, StackedBarChart } from './StackedBarChart';
 import { Sparkline } from './Sparkline';
@@ -43,21 +43,40 @@ export const PhoneLongLabel: StoryObj = {
   parameters: { testRunner: { viewportWidth: 360 } },
   play: async ({ canvasElement }) => {
     const plot = canvasElement.querySelector<HTMLElement>('[role="slider"]')!;
-    const fits = () => {
+    const measure = () => {
       const box = plot.getBoundingClientRect();
       const pill = plot.querySelector<HTMLElement>('span[aria-hidden="true"]')!.parentElement!.getBoundingClientRect();
-      const bars = plot.lastElementChild!.getBoundingClientRect();
-      return { left: pill.left - box.left, right: box.right - pill.right, gap: bars.top - pill.bottom };
+      const bars = plot.lastElementChild!;
+      const bar = bars.children[Number(plot.getAttribute('aria-valuenow'))]!.getBoundingClientRect();
+      return {
+        left: pill.left - box.left,
+        right: box.right - pill.right,
+        gap: bars.getBoundingClientRect().top - pill.bottom,
+        height: pill.height,
+        offCentre: Math.abs(pill.left + pill.width / 2 - (bar.left + bar.width / 2)),
+        width: pill.width,
+        plotWidth: box.width,
+      };
     };
+    plot.focus();
     for (const key of ['End', 'Home']) {
-      plot.focus();
       await userEvent.keyboard(`{${key}}`);
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      const fit = fits();
-      await expect(fit.left).toBeGreaterThanOrEqual(-0.5);
-      await expect(fit.right).toBeGreaterThanOrEqual(-0.5);
-      await expect(fit.gap).toBeGreaterThanOrEqual(0);
+      await waitFor(async () => {
+        const fit = measure();
+        await expect(fit.left).toBeGreaterThanOrEqual(-0.5);
+        await expect(fit.right).toBeGreaterThanOrEqual(-0.5);
+        await expect(fit.gap).toBeGreaterThanOrEqual(0);
+        // Two lines at most: not squeezed into a column at the edge.
+        await expect(fit.height).toBeLessThan(48);
+      });
     }
+    // A middle bar has room on both sides: its pill sits centred over it.
+    for (let i = 0; i < 6; i += 1) await userEvent.keyboard('{ArrowRight}');
+    await waitFor(async () => {
+      const fit = measure();
+      await expect(fit.width).toBeLessThanOrEqual(fit.plotWidth + 0.5);
+      if (fit.width < fit.plotWidth - 1) await expect(fit.offCentre).toBeLessThanOrEqual(1);
+    });
   },
 };
 
