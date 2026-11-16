@@ -39,38 +39,6 @@ const PILL_GAP = 6;
 // useLayoutEffect warns when rendered on the server, where it never runs.
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
 
-/**
- * The plot's width and the pill's size, kept current as either changes, so
- * the pill can be centred over its bar without leaving the plot.
- */
-function usePillFit(plot: React.RefObject<HTMLElement | null>, pill: React.RefObject<HTMLElement | null>, deps: unknown[]) {
-  const [fit, setFit] = React.useState<{ plotWidth: number; pillWidth: number; pillHeight: number } | null>(null);
-  useIsomorphicLayoutEffect(() => {
-    const measure = () => {
-      if (!plot.current || !pill.current) {
-        setFit(null);
-        return;
-      }
-      // Fractional sizes: offsetWidth rounds, and a pill rounded down by
-      // half a pixel ends half a pixel past the plot.
-      const plotBox = plot.current.getBoundingClientRect();
-      const pillBox = pill.current.getBoundingClientRect();
-      const next = { plotWidth: plotBox.width, pillWidth: pillBox.width, pillHeight: pillBox.height };
-      setFit((prev) =>
-        prev && prev.plotWidth === next.plotWidth && prev.pillWidth === next.pillWidth && prev.pillHeight === next.pillHeight
-          ? prev
-          : next,
-      );
-    };
-    measure();
-    if (typeof ResizeObserver === 'undefined') return undefined;
-    const observer = new ResizeObserver(measure);
-    if (plot.current) observer.observe(plot.current);
-    if (pill.current) observer.observe(pill.current);
-    return () => observer.disconnect();
-  }, deps);
-  return fit;
-}
 
 /**
  * Soft rounded bars, one series. Pass `onSelect` to let people pick a bar;
@@ -101,7 +69,33 @@ export function BarChart({
   // then start lower, so a wrapped pill never covers the tallest one.
   const plotRef = React.useRef<HTMLDivElement>(null);
   const pillRef = React.useRef<HTMLSpanElement>(null);
-  const fit = usePillFit(plotRef, pillRef, [selectedIndex, data.length, label]);
+  // The plot's width and the pill's size, kept current as either changes.
+  // Fractional sizes: offsetWidth rounds, and a pill rounded down by half a
+  // pixel would end half a pixel past the plot.
+  const [fit, setFit] = React.useState<{ plotWidth: number; pillWidth: number; pillHeight: number } | null>(null);
+  useIsomorphicLayoutEffect(() => {
+    const plotEl = plotRef.current;
+    const pillEl = pillRef.current;
+    if (!plotEl || !pillEl) {
+      setFit(null);
+      return undefined;
+    }
+    const measure = () => {
+      const { width: plotWidth } = plotEl.getBoundingClientRect();
+      const { width: pillWidth, height: pillHeight } = pillEl.getBoundingClientRect();
+      setFit((prev) =>
+        prev?.plotWidth === plotWidth && prev.pillWidth === pillWidth && prev.pillHeight === pillHeight
+          ? prev
+          : { plotWidth, pillWidth, pillHeight },
+      );
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(plotEl);
+    observer.observe(pillEl);
+    return () => observer.disconnect();
+  }, [selectedIndex, data.length, label]);
   const centre = selectedIndex !== undefined ? ((selectedIndex + 0.5) * 100) / data.length : 0;
   const pillLeft = fit
     ? `${Math.max(0, Math.min(fit.plotWidth - fit.pillWidth, (centre / 100) * fit.plotWidth - fit.pillWidth / 2))}px`
