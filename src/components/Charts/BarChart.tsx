@@ -51,11 +51,11 @@ function usePillFit(plot: React.RefObject<HTMLElement | null>, pill: React.RefOb
         setFit(null);
         return;
       }
-      const next = {
-        plotWidth: plot.current.clientWidth,
-        pillWidth: pill.current.offsetWidth,
-        pillHeight: pill.current.offsetHeight,
-      };
+      // Fractional sizes: offsetWidth rounds, and a pill rounded down by
+      // half a pixel ends half a pixel past the plot.
+      const plotBox = plot.current.getBoundingClientRect();
+      const pillBox = pill.current.getBoundingClientRect();
+      const next = { plotWidth: plotBox.width, pillWidth: pillBox.width, pillHeight: pillBox.height };
       setFit((prev) =>
         prev && prev.plotWidth === next.plotWidth && prev.pillWidth === next.pillWidth && prev.pillHeight === next.pillHeight
           ? prev
