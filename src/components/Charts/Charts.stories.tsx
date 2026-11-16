@@ -1,5 +1,6 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import { expect, userEvent } from '@storybook/test';
 import { BarChart } from './BarChart';
 import { ChartLegend, StackedBarChart } from './StackedBarChart';
 import { Sparkline } from './Sparkline';
@@ -15,6 +16,51 @@ function Selectable() {
   return <BarChart aria-label="Revenue by day" data={data} selectedIndex={index} onSelect={setIndex} formatSelected={(d) => d.label} axisLabels={['Day 1', 'Day 13']} />;
 }
 export const SelectableBars: StoryObj = { render: () => <Selectable /> };
+
+/**
+ * A long label on a phone: the pill stays inside the plot, centred over its
+ * bar where there is room, and wraps when it is wider than the plot, with
+ * the bars moved down to make room. Picking the first or last bar slides it
+ * in from the edge.
+ */
+function PhoneLongLabelDemo() {
+  const [index, setIndex] = React.useState(data.length - 1);
+  return (
+    <div style={{ width: 280 }}>
+      <BarChart
+        aria-label="Revenue by day"
+        data={data}
+        selectedIndex={index}
+        onSelect={setIndex}
+        formatSelected={(_, i) => `${i + 1} Nov · 14,850.00\u00a0L · profit\u00a06,546.25\u00a0L`}
+        axisLabels={['1 Nov', '13 Nov']}
+      />
+    </div>
+  );
+}
+export const PhoneLongLabel: StoryObj = {
+  render: () => <PhoneLongLabelDemo />,
+  parameters: { testRunner: { viewportWidth: 360 } },
+  play: async ({ canvasElement }) => {
+    const plot = canvasElement.querySelector<HTMLElement>('[role="slider"]')!;
+    const fits = () => {
+      const box = plot.getBoundingClientRect();
+      const pill = plot.querySelector<HTMLElement>('span[aria-hidden="true"]')!.parentElement!.getBoundingClientRect();
+      const bars = plot.lastElementChild!.getBoundingClientRect();
+      return { left: pill.left - box.left, right: box.right - pill.right, gap: bars.top - pill.bottom };
+    };
+    for (const key of ['End', 'Home']) {
+      plot.focus();
+      await userEvent.keyboard(`{${key}}`);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const fit = fits();
+      await expect(fit.left).toBeGreaterThanOrEqual(-0.5);
+      await expect(fit.right).toBeGreaterThanOrEqual(-0.5);
+      await expect(fit.gap).toBeGreaterThanOrEqual(0);
+    }
+  },
+};
+
 export const PlainBars: StoryObj = { render: () => <BarChart aria-label="Revenue by day" data={data} height={140} /> };
 
 const series = [{ label: 'Cost' }, { label: 'Profit' }];
