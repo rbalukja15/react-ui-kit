@@ -134,7 +134,7 @@
     "@mui/material": "^5.18.0",
     "@mui/x-date-pickers": "^8.29.4",
     "@size-limit/preset-small-lib": "^11.2.0",
-    "@storybook/addon-a11y": "^8.6.18",
+    "@storybook/addon-a11y": "^10.6.3",
     "@storybook/addon-essentials": "^8.6.18",
     "@storybook/addon-interactions": "^8.6.18",
     "@storybook/blocks": "^8.6.18",
