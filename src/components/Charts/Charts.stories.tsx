@@ -1,5 +1,6 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import { expect, userEvent, waitFor } from '@storybook/test';
 import { BarChart } from './BarChart';
 import { ChartLegend, StackedBarChart } from './StackedBarChart';
 import { Sparkline } from './Sparkline';
@@ -15,6 +16,70 @@ function Selectable() {
   return <BarChart aria-label="Revenue by day" data={data} selectedIndex={index} onSelect={setIndex} formatSelected={(d) => d.label} axisLabels={['Day 1', 'Day 13']} />;
 }
 export const SelectableBars: StoryObj = { render: () => <Selectable /> };
+
+/**
+ * A long label on a phone: the pill stays inside the plot, centred over its
+ * bar where there is room, and wraps when it is wider than the plot, with
+ * the bars moved down to make room. Picking the first or last bar slides it
+ * in from the edge.
+ */
+function PhoneLongLabelDemo() {
+  const [index, setIndex] = React.useState(data.length - 1);
+  return (
+    <div style={{ width: 280 }}>
+      <BarChart
+        aria-label="Revenue by day"
+        data={data}
+        selectedIndex={index}
+        onSelect={setIndex}
+        formatSelected={(_, i) => `${i + 1} Nov · 14,850.00\u00a0L · profit\u00a06,546.25\u00a0L`}
+        axisLabels={['1 Nov', '13 Nov']}
+      />
+    </div>
+  );
+}
+export const PhoneLongLabel: StoryObj = {
+  render: () => <PhoneLongLabelDemo />,
+  parameters: { testRunner: { viewportWidth: 360 } },
+  play: async ({ canvasElement }) => {
+    const plot = canvasElement.querySelector<HTMLElement>('[role="slider"]')!;
+    const measure = () => {
+      const box = plot.getBoundingClientRect();
+      const pill = plot.querySelector<HTMLElement>('span[aria-hidden="true"]')!.parentElement!.getBoundingClientRect();
+      const bars = plot.lastElementChild!;
+      const bar = bars.children[Number(plot.getAttribute('aria-valuenow'))]!.getBoundingClientRect();
+      return {
+        left: pill.left - box.left,
+        right: box.right - pill.right,
+        gap: bars.getBoundingClientRect().top - pill.bottom,
+        height: pill.height,
+        offCentre: Math.abs(pill.left + pill.width / 2 - (bar.left + bar.width / 2)),
+        width: pill.width,
+        plotWidth: box.width,
+      };
+    };
+    plot.focus();
+    for (const key of ['End', 'Home']) {
+      await userEvent.keyboard(`{${key}}`);
+      await waitFor(async () => {
+        const fit = measure();
+        await expect(fit.left).toBeGreaterThanOrEqual(-0.5);
+        await expect(fit.right).toBeGreaterThanOrEqual(-0.5);
+        await expect(fit.gap).toBeGreaterThanOrEqual(0);
+        // Two lines at most: not squeezed into a column at the edge.
+        await expect(fit.height).toBeLessThan(48);
+      });
+    }
+    // A middle bar has room on both sides: its pill sits centred over it.
+    for (let i = 0; i < 6; i += 1) await userEvent.keyboard('{ArrowRight}');
+    await waitFor(async () => {
+      const fit = measure();
+      await expect(fit.width).toBeLessThanOrEqual(fit.plotWidth + 0.5);
+      if (fit.width < fit.plotWidth - 1) await expect(fit.offCentre).toBeLessThanOrEqual(1);
+    });
+  },
+};
+
 export const PlainBars: StoryObj = { render: () => <BarChart aria-label="Revenue by day" data={data} height={140} /> };
 
 const series = [{ label: 'Cost' }, { label: 'Profit' }];

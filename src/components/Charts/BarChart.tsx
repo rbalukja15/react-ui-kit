@@ -33,6 +33,12 @@ export interface BarChartProps {
 }
 
 const PILL_ROOM = 34;
+/** Space kept between the pill and the tallest bar when the pill wraps. */
+const PILL_GAP = 6;
+
+// useLayoutEffect warns when rendered on the server, where it never runs.
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
+
 
 /**
  * Soft rounded bars, one series. Pass `onSelect` to let people pick a bar;
@@ -55,9 +61,50 @@ export function BarChart({
   sx,
 }: BarChartProps) {
   const max = maxOf(data.map((d) => d.value)) || 1;
-  const plot = height - PILL_ROOM;
   const selected = selectedIndex !== undefined ? data[selectedIndex] : undefined;
-  const pillLeft = selectedIndex !== undefined ? Math.min(88, Math.max(12, ((selectedIndex + 0.5) * 100) / data.length)) : 0;
+  const label = selected && selectedIndex !== undefined ? formatSelected(selected, selectedIndex) : undefined;
+
+  // The pill sits centred over its bar, slid sideways as far as it must to
+  // stay inside the plot, and wraps if it is wider than the plot; the bars
+  // then start lower, so a wrapped pill never covers the tallest one.
+  const plotRef = React.useRef<HTMLDivElement>(null);
+  const pillRef = React.useRef<HTMLSpanElement>(null);
+  // The plot's width and the pill's size, kept current as either changes.
+  // Fractional sizes: offsetWidth rounds, and a pill rounded down by half a
+  // pixel would end half a pixel past the plot.
+  const [fit, setFit] = React.useState<{ plotWidth: number; pillWidth: number; pillHeight: number } | null>(null);
+  useIsomorphicLayoutEffect(() => {
+    const plotEl = plotRef.current;
+    const pillEl = pillRef.current;
+    if (!plotEl || !pillEl) {
+      setFit(null);
+      return undefined;
+    }
+    const measure = () => {
+      const { width: plotWidth } = plotEl.getBoundingClientRect();
+      const { width: pillWidth, height: pillHeight } = pillEl.getBoundingClientRect();
+      setFit((prev) =>
+        prev?.plotWidth === plotWidth && prev.pillWidth === pillWidth && prev.pillHeight === pillHeight
+          ? prev
+          : { plotWidth, pillWidth, pillHeight },
+      );
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(plotEl);
+    observer.observe(pillEl);
+    return () => observer.disconnect();
+  }, [selectedIndex, data.length, label]);
+  const centre = selectedIndex !== undefined ? ((selectedIndex + 0.5) * 100) / data.length : 0;
+  const pillLeft = fit
+    ? `${Math.max(0, Math.min(fit.plotWidth - fit.pillWidth, (centre / 100) * fit.plotWidth - fit.pillWidth / 2))}px`
+    : `${centre}%`;
+  // Before it is measured, translating by the same share of its own width
+  // keeps the pill inside the plot wherever its bar is.
+  const pillShift = fit ? undefined : `translateX(-${centre}%)`;
+  const room = selected && fit ? Math.max(PILL_ROOM, fit.pillHeight + PILL_GAP) : PILL_ROOM;
+  const plot = height - room;
 
   const count = data.length;
   const interactive = onSelect !== undefined && count > 0;
@@ -110,6 +157,7 @@ export function BarChart({
     <Box sx={[{ display: 'flex', flexDirection: 'column', gap: 1 }, ...(Array.isArray(sx) ? sx : [sx])]}>
       <Box
         {...sliderProps}
+        ref={plotRef}
         sx={(theme) => ({
           position: 'relative',
           height,
@@ -135,15 +183,27 @@ export function BarChart({
           />
         ))}
         {selected && selectedIndex !== undefined && (
-          <Pill
-            tone="primary"
-            size="medium"
-            sx={{ position: 'absolute', top: 0, left: `${pillLeft}%`, transform: 'translateX(-50%)', fontSize: '0.75rem' }}
+          <Box
+            ref={pillRef}
+            component="span"
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: pillLeft,
+              transform: pillShift,
+              // Sized by its text, not by the room right of `left`, which near
+              // the last bar is a sliver and would squeeze the pill into a column.
+              width: 'max-content',
+              maxWidth: '100%',
+              display: 'flex',
+            }}
           >
-            <span aria-hidden={interactive ? true : undefined}>{formatSelected(selected, selectedIndex)}</span>
-          </Pill>
+            <Pill tone="primary" size="medium" sx={{ maxWidth: '100%', whiteSpace: 'normal', textAlign: 'center', fontSize: '0.75rem' }}>
+              <span aria-hidden={interactive ? true : undefined}>{label}</span>
+            </Pill>
+          </Box>
         )}
-        <Box sx={{ position: 'absolute', left: 0, right: 0, bottom: 0, top: PILL_ROOM, display: 'flex', alignItems: 'flex-end', gap: '3px' }}>
+        <Box sx={{ position: 'absolute', left: 0, right: 0, bottom: 0, top: room, display: 'flex', alignItems: 'flex-end', gap: '3px' }}>
           {data.map((d, i) => {
             const on = i === selectedIndex;
             return (
